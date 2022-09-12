@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class SurvislandPlayer {
+public class SurvislandPlayer implements Collidable {
 
     private TextureRegion textureRegion;
     private int width;
@@ -68,6 +68,7 @@ public class SurvislandPlayer {
         return rotation;
     }
 
+    @Override
     public Rectangle getCollider() {
         return collider;
     }

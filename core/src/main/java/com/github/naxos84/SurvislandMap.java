@@ -108,16 +108,16 @@ public class SurvislandMap {
 
     public void renderWallsDebug(ShapeRenderer debugRenderer) {
         for (Wall wall : walls) {
-            Rectangle wallCollider = wall.getWallCollider();
+            Rectangle wallCollider = wall.getCollider();
             if (wall.isCollidable()) {
                 debugRenderer.rect(wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
             }
         }
     }
 
-    public boolean isCollidingWithWall(SurvislandPlayer player) {
+    public boolean isCollidingWithWall(Collidable collidable) {
         for (Wall wall : walls) {
-            if (wall.collidesWidth(player)) {
+            if (wall.collidesWidth(collidable)) {
                 return true;
             }
         }

@@ -3,7 +3,7 @@ package com.github.naxos84;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Wall {
+public class Wall implements Collidable {
 
     private Rectangle wallCollider;
     private Cell cell;
@@ -18,7 +18,8 @@ public class Wall {
         }
     }
 
-    public Rectangle getWallCollider() {
+    @Override
+    public Rectangle getCollider() {
         return wallCollider;
     }
 
@@ -52,9 +53,9 @@ public class Wall {
         return this.isDoor;
     }
 
-    public boolean collidesWidth(SurvislandPlayer player) {
+    public boolean collidesWidth(Collidable collidable) {
         if (isCollidable()) {
-            return this.wallCollider.overlaps(player.getCollider());
+            return this.wallCollider.overlaps(collidable.getCollider());
         }
         return false;
 
