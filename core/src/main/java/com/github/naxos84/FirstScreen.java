@@ -25,8 +25,6 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	private OrthographicCamera camera;
 
-	Player player = new Player(100, 100);
-
 	Texture characterTexture;
 
 	TextureRegion zombie;
@@ -36,6 +34,7 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	private boolean isColliding;
 	private SurvislandMap sMap = new SurvislandMap();
+	private SurvislandPlayer sPlayer;
 
 	@Override
 	public void show() {
@@ -45,7 +44,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		this.characterTexture = new Texture("characters/spritesheet.png");
 		this.zombie = new TextureRegion(characterTexture, 460, 0, 33, 43);
 		this.batch = new SpriteBatch();
-		this.player = new Player(33, 43);
+		sPlayer = new SurvislandPlayer(this.zombie, 33, 43);
 		this.spawnPlayer();
 
 		this.updateCamera();
@@ -55,7 +54,7 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	private void spawnPlayer() {
 		Vector2 playerSpawn = sMap.getPlayerSpawn();
-		this.player.position.set(playerSpawn);
+		this.sPlayer.setPosition(playerSpawn);
 	}
 
 	@Override
@@ -67,25 +66,24 @@ public class FirstScreen implements Screen, InputProcessor {
 		handleInput();
 		handleMapBorderCollision();
 
-		this.player.rotation = getPlayerRotation();
-
-		float halfPlayerWidth = this.player.collider.width / 2f;
-		float halfPlayerHeight = this.player.collider.height / 2f;
+		Vector2 mousePosition = getMousePosition();
+		sPlayer.lookAt(mousePosition);
 
 		this.batch.setProjectionMatrix(this.camera.combined);
 		this.batch.begin();
-		this.batch.draw(zombie,
-				player.getXPosition(),
-				player.getYPosition(),
-				halfPlayerWidth, halfPlayerHeight, player.getPlayerWidth(),
-				player.getPlayerHeight(), 1f, 1f,
-				this.player.rotation);
+		this.sPlayer.render(batch);
+
 		this.batch.end();
 
 		if (debug) {
 			renderDebug();
 		}
 
+	}
+
+	private Vector2 getMousePosition() {
+		Vector3 unprojectedMousePosition = this.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+		return new Vector2(unprojectedMousePosition.x, unprojectedMousePosition.y);
 	}
 
 	private void renderDebug() {
@@ -97,10 +95,8 @@ public class FirstScreen implements Screen, InputProcessor {
 			debugRenderer.setColor(Color.WHITE);
 		}
 		debugRenderer.begin(ShapeType.Line);
-		debugRenderer.rect(this.player.collider.x,
-				this.player.collider.y,
-				player.collider.width, player.collider.height);
 
+		sPlayer.renderDebug(debugRenderer);
 		sMap.renderWallsDebug(debugRenderer);
 
 		debugRenderer.end();
@@ -109,25 +105,12 @@ public class FirstScreen implements Screen, InputProcessor {
 	private void handleMapBorderCollision() {
 		Integer mapWidth = sMap.getWidth();
 		Integer mapHeight = sMap.getHeight();
-		float playerSize = Math.max(player.getPlayerWidth(), player.getPlayerHeight());
+		float playerSize = sPlayer.getSize();
 
-		float playerX = MathUtils.clamp(this.player.position.x, 0, mapWidth - playerSize);
-		float playerY = MathUtils.clamp(this.player.position.y, 0, mapHeight - playerSize);
+		float playerX = MathUtils.clamp(this.sPlayer.getX(), 0, mapWidth - playerSize);
+		float playerY = MathUtils.clamp(this.sPlayer.getY(), 0, mapHeight - playerSize);
 
-		this.player.position.set(playerX, playerY);
-	}
-
-	private float getPlayerRotation() {
-		Vector3 unprojectedMousePosition = this.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
-		Vector2 mousePosition = new Vector2(unprojectedMousePosition.x, unprojectedMousePosition.y);
-
-		Vector2 centerPlayerPosition = this.player.position.cpy();
-		centerPlayerPosition.add(player.collider.width / 2f, player.collider.height / 2f);
-
-		Vector2 targetPosition = mousePosition.cpy();
-		targetPosition.sub(centerPlayerPosition);
-
-		return targetPosition.angleDeg();
+		this.sPlayer.setPosition(playerX, playerY);
 	}
 
 	private void handleInput() {
@@ -141,11 +124,11 @@ public class FirstScreen implements Screen, InputProcessor {
 			horizontalMovement.add(Vector2.X);
 		}
 
-		this.player.move(horizontalMovement);
+		this.sPlayer.move(horizontalMovement);
 		checkCollision();
 		if (this.isColliding) {
 			horizontalMovement.rotateDeg(180);
-			this.player.move(horizontalMovement);
+			this.sPlayer.move(horizontalMovement);
 		}
 
 		Vector2 verticalMovement = new Vector2();
@@ -156,12 +139,12 @@ public class FirstScreen implements Screen, InputProcessor {
 		if (Gdx.input.isKeyPressed(Keys.S) || Gdx.input.isKeyPressed(Keys.DOWN)) {
 			verticalMovement.sub(Vector2.Y);
 		}
-		this.player.move(verticalMovement);
+		this.sPlayer.move(verticalMovement);
 		checkCollision();
 
 		if (this.isColliding) {
 			verticalMovement.rotateDeg(180);
-			this.player.move(verticalMovement);
+			this.sPlayer.move(verticalMovement);
 		}
 
 		hasMoved = !horizontalMovement.isZero() || !verticalMovement.isZero();
@@ -172,7 +155,7 @@ public class FirstScreen implements Screen, InputProcessor {
 	}
 
 	private void checkCollision() {
-		this.isColliding = sMap.isCollidingWithWall(player);
+		this.isColliding = sMap.isCollidingWithWall(sPlayer);
 
 	}
 
@@ -227,8 +210,8 @@ public class FirstScreen implements Screen, InputProcessor {
 
 		float halfScreenWidth = camera.viewportWidth / 2;
 		float halfScreenHeight = camera.viewportHeight / 2;
-		float playerXPosition = this.player.getXPosition();
-		float playerYPosition = this.player.getYPosition();
+		float playerXPosition = this.sPlayer.getX();
+		float playerYPosition = this.sPlayer.getY();
 		int mapWidth = sMap.getWidth();
 		int mapHeight = sMap.getHeight();
 		if (playerXPosition < halfScreenWidth) {

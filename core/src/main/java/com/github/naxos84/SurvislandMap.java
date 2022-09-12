@@ -115,7 +115,7 @@ public class SurvislandMap {
         }
     }
 
-    public boolean isCollidingWithWall(Player player) {
+    public boolean isCollidingWithWall(SurvislandPlayer player) {
         for (Wall wall : walls) {
             if (wall.collidesWidth(player)) {
                 return true;

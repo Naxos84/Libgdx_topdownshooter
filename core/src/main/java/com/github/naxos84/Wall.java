@@ -52,9 +52,9 @@ public class Wall {
         return this.isDoor;
     }
 
-    public boolean collidesWidth(Player player) {
+    public boolean collidesWidth(SurvislandPlayer player) {
         if (isCollidable()) {
-            return this.wallCollider.overlaps(player.collider);
+            return this.wallCollider.overlaps(player.getCollider());
         }
         return false;
 
