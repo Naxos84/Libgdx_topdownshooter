@@ -1,0 +1,86 @@
+{
+"com.badlogic.gdx.graphics.g2d.BitmapFont": {
+	"kenpixel_future_black": {
+		"file": "kenpixel_future.fnt"
+	}
+},
+"com.badlogic.gdx.graphics.Color": {
+	"Black": {
+		"r": 0,
+		"g": 0,
+		"b": 0,
+		"a": 1
+	},
+	"red": {
+		"r": 1,
+		"g": 0,
+		"b": 0,
+		"a": 1
+	},
+	"textbutton_over": {
+		"r": 0.3254902,
+		"g": 0.12941177,
+		"b": 0.12941177,
+		"a": 1
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle": {
+	"default": {
+		"checkboxOn": "blue_boxCheckmark",
+		"checkboxOff": "grey_box",
+		"font": "kenpixel_future_black"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle": {
+	"default": {
+		"font": "kenpixel_future_black"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle": {
+	"default": {
+		"font": "kenpixel_future_black",
+		"fontColorSelected": "red",
+		"fontColorUnselected": "Black",
+		"selection": "blue_button03"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle": {
+	"default": {
+		"background": "blue_panel"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxStyle": {
+	"default": {
+		"font": "kenpixel_future_black",
+		"fontColor": "red",
+		"background": "blue_button13",
+		"scrollStyle": "default",
+		"listStyle": "default"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.Slider$SliderStyle": {
+	"default-horizontal": {
+		"background": "grey_sliderHorizontal",
+		"knob": "grey_sliderEnd"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle": {
+	"default": {
+		"font": "kenpixel_future_black",
+		"up": "blue_button00",
+		"down": "blue_button01",
+		"pressedOffsetY": -2
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.TextField$TextFieldStyle": {
+	"default": {
+		"font": "kenpixel_future_black",
+		"fontColor": "Black"
+	}
+},
+"com.badlogic.gdx.scenes.scene2d.ui.TextTooltip$TextTooltipStyle": {
+	"default": {
+		"label": "default"
+	}
+}
+}
