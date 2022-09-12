@@ -26,10 +26,11 @@
         }
     },
     "last.imagePath": "C:/Matze/Projekte/Java/Libgdx/Survisland/assets/tiled",
-    "map.height": 30,
+    "map.height": 15,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 64,
     "map.tileWidth": 64,
+    "map.width": 15,
     "openFiles": [
         "tilesheet_complete.tsx",
         "base.tmx"
