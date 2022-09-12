@@ -2,6 +2,7 @@ package com.github.naxos84;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapObjects;
@@ -23,9 +24,41 @@ public class SurvislandMap {
 
     private TiledMap map;
 
+    private Array<Wall> walls = new Array<>();
+    private int width;
+    private int height;
+
     public void loadMap(String fileName) {
         this.map = mapLoader.load(fileName);
         this.mapRenderer.setMap(this.map);
+        this.loadDimensions();
+        this.loadWalls();
+    }
+
+    private void loadDimensions() {
+        MapProperties prop = this.map.getProperties();
+        Integer mapWidth = prop.get("width", Integer.class);
+        Integer mapHeight = prop.get("height", Integer.class);
+
+        this.width = mapWidth * CELL_SIZE;
+        this.height = mapHeight * CELL_SIZE;
+    }
+
+    private void loadWalls() {
+        TiledMapTileLayer wallsLayer = (TiledMapTileLayer) this.map.getLayers().get("Walls");
+        for (int column = 0; column < wallsLayer.getWidth(); column++) {
+            for (int row = 0; row < wallsLayer.getHeight(); row++) {
+                Cell cell = wallsLayer.getCell(column, row);
+                if (cell != null) {
+                    Rectangle wallCollider = new Rectangle((float) column * wallsLayer.getTileWidth(),
+                            (float) row * wallsLayer.getTileHeight(), wallsLayer.getTileWidth(),
+                            wallsLayer.getTileHeight());
+
+                    Wall wall = new Wall(wallCollider, cell);
+                    this.walls.add(wall);
+                }
+            }
+        }
     }
 
     public void render(OrthographicCamera camera) {
@@ -33,18 +66,12 @@ public class SurvislandMap {
         this.mapRenderer.render();
     }
 
-    public Integer getWidth() {
-        MapProperties prop = this.map.getProperties();
-        Integer mapWidth = prop.get("width", Integer.class);
-
-        return mapWidth * CELL_SIZE;
+    public int getWidth() {
+        return this.width;
     }
 
-    public Integer getHeight() {
-        MapProperties prop = this.map.getProperties();
-        Integer mapHeight = prop.get("height", Integer.class);
-
-        return mapHeight * CELL_SIZE;
+    public int getHeight() {
+        return this.height;
     }
 
     public Vector2 getPlayerSpawn() {
@@ -66,24 +93,35 @@ public class SurvislandMap {
         return Vector2.Zero;
     }
 
-    public Array<Wall> getWalls() {
-        Array<Wall> walls = new Array<>();
-        TiledMapTileLayer wallsLayer = (TiledMapTileLayer) this.map.getLayers().get("Walls");
-        for (int column = 0; column < wallsLayer.getWidth(); column++) {
-            for (int row = 0; row < wallsLayer.getHeight(); row++) {
-                Cell cell = wallsLayer.getCell(column, row);
-                if (cell != null) {
-                    Rectangle wallCollider = new Rectangle((float) column * wallsLayer.getTileWidth(),
-                            (float) row * wallsLayer.getTileHeight(), wallsLayer.getTileWidth(),
-                            wallsLayer.getTileHeight());
+    // public Array<Wall> getWalls() {
+    // return this.walls;
+    // }
 
-                    Wall wall = new Wall(wallCollider, cell);
-                    walls.add(wall);
-                }
+    public void toggleAllDoors() {
+        for (Wall wall : walls) {
+            boolean open = wall.isOpen();
+            if (wall.isDoor()) {
+                wall.setOpen(!open);
             }
         }
+    }
 
-        return walls;
+    public void renderWallsDebug(ShapeRenderer debugRenderer) {
+        for (Wall wall : walls) {
+            Rectangle wallCollider = wall.getWallCollider();
+            if (wall.isCollidable()) {
+                debugRenderer.rect(wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
+            }
+        }
+    }
+
+    public boolean isCollidingWithWall(Player player) {
+        for (Wall wall : walls) {
+            if (wall.collidesWidth(player)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

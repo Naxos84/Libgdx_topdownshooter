@@ -13,10 +13,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 
 /**
  * First screen of the application. Displayed after the application is created.
@@ -36,14 +34,12 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	ShapeRenderer debugRenderer = new ShapeRenderer();
 
-	private Array<Wall> walls = new Array<>();
 	private boolean isColliding;
 	private SurvislandMap sMap = new SurvislandMap();
 
 	@Override
 	public void show() {
 		sMap.loadMap("tiled/base.tmx");
-		this.walls = sMap.getWalls();
 		this.camera = new OrthographicCamera(800, 600);
 
 		this.characterTexture = new Texture("characters/spritesheet.png");
@@ -105,12 +101,7 @@ public class FirstScreen implements Screen, InputProcessor {
 				this.player.collider.y,
 				player.collider.width, player.collider.height);
 
-		for (Wall wall : walls) {
-			Rectangle wallCollider = wall.getWallCollider();
-			if (wall.isCollidable()) {
-				debugRenderer.rect(wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
-			}
-		}
+		sMap.renderWallsDebug(debugRenderer);
 
 		debugRenderer.end();
 	}
@@ -181,13 +172,8 @@ public class FirstScreen implements Screen, InputProcessor {
 	}
 
 	private void checkCollision() {
-		this.isColliding = false;
-		for (Wall wall : walls) {
-			if (wall.collidesWidth(player)) {
-				this.isColliding = true;
-				break;
-			}
-		}
+		this.isColliding = sMap.isCollidingWithWall(player);
+
 	}
 
 	@Override
@@ -243,18 +229,20 @@ public class FirstScreen implements Screen, InputProcessor {
 		float halfScreenHeight = camera.viewportHeight / 2;
 		float playerXPosition = this.player.getXPosition();
 		float playerYPosition = this.player.getYPosition();
+		int mapWidth = sMap.getWidth();
+		int mapHeight = sMap.getHeight();
 		if (playerXPosition < halfScreenWidth) {
 			cX = halfScreenWidth;
-		} else if (playerXPosition > sMap.getWidth() - halfScreenWidth) {
-			cX = sMap.getWidth() - halfScreenWidth;
+		} else if (playerXPosition > mapWidth - halfScreenWidth) {
+			cX = mapWidth - halfScreenWidth;
 		} else {
 			cX = playerXPosition;
 		}
 
 		if (playerYPosition < halfScreenHeight) {
 			cY = halfScreenHeight;
-		} else if (playerYPosition > sMap.getWidth() - halfScreenHeight) {
-			cY = sMap.getWidth() - halfScreenHeight;
+		} else if (playerYPosition > mapHeight - halfScreenHeight) {
+			cY = mapHeight - halfScreenHeight;
 		} else {
 			cY = playerYPosition;
 		}
@@ -266,12 +254,7 @@ public class FirstScreen implements Screen, InputProcessor {
 	@Override
 	public boolean keyTyped(char character) {
 		if (character == 'j') {
-			for (Wall wall : walls) {
-				boolean open = wall.isOpen();
-				if (wall.isDoor()) {
-					wall.setOpen(!open);
-				}
-			}
+			sMap.toggleAllDoors();
 		}
 		// TODO Auto-generated method stub
 		return false;
