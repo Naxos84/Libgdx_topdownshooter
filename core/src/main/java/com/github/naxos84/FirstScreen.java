@@ -1,7 +1,6 @@
 package com.github.naxos84;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Keys;
@@ -13,16 +12,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
-import com.badlogic.gdx.maps.MapLayers;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.MapObjects;
-import com.badlogic.gdx.maps.MapProperties;
-import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTile;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -34,11 +23,8 @@ import com.badlogic.gdx.utils.Array;
  */
 public class FirstScreen implements Screen, InputProcessor {
 
-	private static final int CELL_SIZE = 64;
 	private final boolean debug = false;
 
-	private TiledMap map;
-	private OrthogonalTiledMapRenderer mapRenderer;
 	private OrthographicCamera camera;
 
 	Player player = new Player(100, 100);
@@ -46,19 +32,18 @@ public class FirstScreen implements Screen, InputProcessor {
 	Texture characterTexture;
 
 	TextureRegion zombie;
-	float zombieAnimElapsedTime;
 	SpriteBatch batch;
 
 	ShapeRenderer debugRenderer = new ShapeRenderer();
 
 	private Array<Wall> walls = new Array<>();
 	private boolean isColliding;
+	private SurvislandMap sMap = new SurvislandMap();
 
 	@Override
 	public void show() {
-		loadMap();
-		createColliders();
-		this.mapRenderer = new OrthogonalTiledMapRenderer(this.map);
+		sMap.loadMap("tiled/base.tmx");
+		this.walls = sMap.getWalls();
 		this.camera = new OrthographicCamera(800, 600);
 
 		this.characterTexture = new Texture("characters/spritesheet.png");
@@ -72,43 +57,9 @@ public class FirstScreen implements Screen, InputProcessor {
 		Gdx.input.setInputProcessor(this);
 	}
 
-	private void loadMap() {
-		TmxMapLoader mapLoader = new TmxMapLoader();
-		this.map = mapLoader.load("tiled/base.tmx");
-	}
-
-	private void createColliders() {
-		TiledMapTileLayer wallsLayer = (TiledMapTileLayer) this.map.getLayers().get("Walls");
-		for (int column = 0; column < wallsLayer.getWidth(); column++) {
-			for (int row = 0; row < wallsLayer.getHeight(); row++) {
-				Cell cell = wallsLayer.getCell(column, row);
-				if (cell != null) {
-					Rectangle wallCollider = new Rectangle((float) column * wallsLayer.getTileWidth(),
-							(float) row * wallsLayer.getTileHeight(), wallsLayer.getTileWidth(),
-							wallsLayer.getTileHeight());
-
-					Wall wall = new Wall(wallCollider, cell);
-					this.walls.add(wall);
-				}
-			}
-		}
-	}
-
 	private void spawnPlayer() {
-		MapLayers mapLayers = map.getLayers();
-		MapObjects spawnPoints = mapLayers.get("Spawnpoints").getObjects();
-		for (MapObject spawnPoint : spawnPoints) {
-			MapProperties spawnPointProperties = spawnPoint.getProperties();
-			if (spawnPointProperties != null && spawnPointProperties.containsKey("playerSpawn")) {
-				Boolean isPlayerSpawn = spawnPointProperties.get("playerSpawn", Boolean.class);
-				if (Boolean.TRUE.equals(isPlayerSpawn)) {
-					Float x = spawnPointProperties.get("x", Float.class);
-					Float y = spawnPointProperties.get("y", Float.class);
-					this.player.position.set(x, y);
-					break;
-				}
-			}
-		}
+		Vector2 playerSpawn = sMap.getPlayerSpawn();
+		this.player.position.set(playerSpawn);
 	}
 
 	@Override
@@ -116,10 +67,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 0.2f);
 
-		this.zombieAnimElapsedTime += delta;
-
-		mapRenderer.setView(this.camera);
-		mapRenderer.render();
+		this.sMap.render(this.camera);
 		handleInput();
 		handleMapBorderCollision();
 
@@ -168,8 +116,8 @@ public class FirstScreen implements Screen, InputProcessor {
 	}
 
 	private void handleMapBorderCollision() {
-		Integer mapWidth = getMapWidth();
-		Integer mapHeight = getMapHeight();
+		Integer mapWidth = sMap.getWidth();
+		Integer mapHeight = sMap.getHeight();
 		float playerSize = Math.max(player.getPlayerWidth(), player.getPlayerHeight());
 
 		float playerX = MathUtils.clamp(this.player.position.x, 0, mapWidth - playerSize);
@@ -286,20 +234,6 @@ public class FirstScreen implements Screen, InputProcessor {
 		return false;
 	}
 
-	public Integer getMapWidth() {
-		MapProperties prop = this.map.getProperties();
-		Integer mapWidth = prop.get("width", Integer.class);
-
-		return mapWidth * CELL_SIZE;
-	}
-
-	public Integer getMapHeight() {
-		MapProperties prop = this.map.getProperties();
-		Integer mapHeight = prop.get("height", Integer.class);
-
-		return mapHeight * CELL_SIZE;
-	}
-
 	private void updateCamera() {
 		Gdx.app.debug("MethodCall", "Updating camera");
 		float cX;
@@ -311,16 +245,16 @@ public class FirstScreen implements Screen, InputProcessor {
 		float playerYPosition = this.player.getYPosition();
 		if (playerXPosition < halfScreenWidth) {
 			cX = halfScreenWidth;
-		} else if (playerXPosition > getMapWidth() - halfScreenWidth) {
-			cX = getMapWidth() - halfScreenWidth;
+		} else if (playerXPosition > sMap.getWidth() - halfScreenWidth) {
+			cX = sMap.getWidth() - halfScreenWidth;
 		} else {
 			cX = playerXPosition;
 		}
 
 		if (playerYPosition < halfScreenHeight) {
 			cY = halfScreenHeight;
-		} else if (playerYPosition > getMapHeight() - halfScreenHeight) {
-			cY = getMapHeight() - halfScreenHeight;
+		} else if (playerYPosition > sMap.getWidth() - halfScreenHeight) {
+			cY = sMap.getWidth() - halfScreenHeight;
 		} else {
 			cY = playerYPosition;
 		}
