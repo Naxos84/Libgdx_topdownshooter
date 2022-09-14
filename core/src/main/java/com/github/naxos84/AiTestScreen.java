@@ -38,6 +38,8 @@ public class AiTestScreen implements Screen, InputProcessor {
     private Integer mapTileHeight;
     private float halfMapTileWidth;
     private float halfMapTileHeight;
+    private Integer mapWidth;
+    private Integer mapHeight;
 
     @Override
     public void show() {
@@ -117,6 +119,20 @@ public class AiTestScreen implements Screen, InputProcessor {
             return null;
         }
         return findTileByGridPosition(column - 1, row);
+    }
+
+    private AiTile getRightNeighbour(int column, int row, int mapWidth) {
+        if (column == mapWidth) {
+            return null;
+        }
+        return findTileByGridPosition(column + 1, row);
+    }
+
+    private AiTile getTopNeighbur(int column, int row, int mapHeight) {
+        if (row == mapHeight) {
+            return null;
+        }
+        return findTileByGridPosition(column, row + 1);
     }
 
     private AiTile getBottomLeftNeighbour(int column, int row) {
@@ -225,11 +241,33 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        // button= 0 -> leftclick ; 1 -> rightclick
         Vector2 clickedWorldCoordinate = toWorldCoordinates(screenX, screenY);
-        AiTile clickedTile = findTileByGridPosition((int) clickedWorldCoordinate.x, (int) clickedWorldCoordinate.y);
+        int x = (int) clickedWorldCoordinate.x;
+        int y = (int) clickedWorldCoordinate.y;
+        AiTile clickedTile = findTileByGridPosition(x, y);
+        if (button == 1) {
+            if (clickedTile == null) {
+                // no tile exists yet --> door closed
+                clickedTile = new AiTile(x * mapTileWidth + halfMapTileWidth, y * mapTileHeight + halfMapTileHeight,
+                        mapTileWidth, mapTileHeight, x + ":" + y);
+                this.aiTileGraph.addAiTile(clickedTile);
+                AiTile topNeighour = this.getTopNeighbur(x, y, mapHeight);
+                AiTile bottomNeighbour = this.getBottomNeighbour(x, y);
+                AiTile leftNeighbour = this.getLeftNeighbour(x, y);
+                AiTile rightNeighbour = this.getRightNeighbour(x, y, mapWidth);
+                connect(topNeighour, clickedTile, true);
+                connect(bottomNeighbour, clickedTile, true);
+                connect(leftNeighbour, clickedTile, true);
+                connect(rightNeighbour, clickedTile, true);
 
+            } else {
+                // existing tile --> open door
+
+            }
+        } else {
         this.selectTile(clickedTile);
-        // TODO Auto-generated method stub
+        }
         return false;
     }
 
