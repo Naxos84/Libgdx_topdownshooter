@@ -105,6 +105,9 @@ public class Agent {
      * Set xSpeed and ySpeed to move towards next tile on path.
      */
     private void setSpeedToNextAiTile() {
+        if (pathQueue.isEmpty()) {
+            return;
+        }
         AiTile nextAiTile = pathQueue.first();
         direction.x = nextAiTile.x - this.x;
         direction.y = nextAiTile.y - this.y;

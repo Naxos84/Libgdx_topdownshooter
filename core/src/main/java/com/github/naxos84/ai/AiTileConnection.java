@@ -19,7 +19,7 @@ public class AiTileConnection implements Connection<AiTile> {
     public void render(ShapeRenderer shapeRenderer) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.rectLine(fromTile.x, fromTile.y, toTile.x, toTile.y, 4);
+        shapeRenderer.rectLine(fromTile.x, fromTile.y, toTile.x, toTile.y, 2);
         shapeRenderer.end();
     }
 

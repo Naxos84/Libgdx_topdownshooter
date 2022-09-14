@@ -5,8 +5,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -15,7 +13,6 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiTile;
@@ -31,14 +28,16 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     AiTileGraph aiTileGraph;
     ShapeRenderer shapeRenderer;
-    SpriteBatch batch;
-    BitmapFont font;
     GraphPath<AiTile> aiPath;
 
     AiTile selectedTile = null;
     Queue<AiTile> selectedTiles = new Queue<AiTile>(2);
 
     Agent agent;
+    private Integer mapTileWidth;
+    private Integer mapTileHeight;
+    private float halfMapTileWidth;
+    private float halfMapTileHeight;
 
     @Override
     public void show() {
@@ -47,51 +46,21 @@ public class AiTestScreen implements Screen, InputProcessor {
         mapRenderer = new OrthogonalTiledMapRenderer(map);
         int mapWidth = map.getProperties().get("width", Integer.class);
         int mapHeight = map.getProperties().get("height", Integer.class);
-        int mapTileWidth = map.getProperties().get("tilewidth", Integer.class);
+        this.mapTileWidth = map.getProperties().get("tilewidth", Integer.class);
+        this.mapTileHeight = map.getProperties().get("tileheight", Integer.class);
+        this.halfMapTileWidth = mapTileWidth / 2f;
+        this.halfMapTileHeight = mapTileHeight / 2f;
         camera = new OrthographicCamera();
         // show whole map
         camera.setToOrtho(false, mapWidth * mapTileWidth, mapHeight * mapTileWidth);
 
         TiledMapTileLayer obstaclesLayer = (TiledMapTileLayer) map.getLayers().get("Obstacles");
 
-        aiTileGraph = new AiTileGraph();
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setAutoShapeType(true);
-        batch = new SpriteBatch();
-        batch.setProjectionMatrix(camera.combined);
-        font = new BitmapFont();
 
-        for (int row = 0; row < mapHeight; row++) {
-            for (int column = 0; column < mapWidth; column++) {
-                Cell cell = obstaclesLayer.getCell(column, row);
-                if (cell == null) {
-                    // we found a cell that is walkable
-                    AiTile aiTile = new AiTile(column * 64 + 32, row * 64 + 32, 64, 64,
-                            column + ":" + row);
-
-                    AiTile leftNeighbour = getLeftNeighbour(column, row);
-                    AiTile bottomNeighbour = getBottomNeighbour(column, row);
-                    AiTile bottomLeftNeighbour = getBottomLeftNeighbour(column, row);
-                    AiTile bottomRightNeighbour = getBottomRightNeighbour(column, row, mapWidth);
-                    aiTileGraph.addAiTile(aiTile);
-                    if (leftNeighbour != null) {
-                        aiTileGraph.connectAiTiles(aiTile, leftNeighbour, true);
-                    }
-                    if (bottomNeighbour != null) {
-                        aiTileGraph.connectAiTiles(aiTile, bottomNeighbour, true);
-                    }
-                    if (bottomLeftNeighbour != null) {
-                        aiTileGraph.connectAiTiles(aiTile, bottomLeftNeighbour, true);
-                    }
-                    if (bottomRightNeighbour != null) {
-                        aiTileGraph.connectAiTiles(aiTile, bottomRightNeighbour, true);
-                    }
-                } else {
-                    // found a blocked cell -> ignore it
-                }
-            }
-        }
+        createGraph(mapWidth, mapHeight, obstaclesLayer);
         AiTile startTile = findTileByGridPosition(0, 0);
         AiTile targetTile = findTileByGridPosition(7, 13);
 
@@ -99,6 +68,41 @@ public class AiTestScreen implements Screen, InputProcessor {
         agent = new Agent(aiTileGraph, startTile);
         agent.setGoal(targetTile);
 
+    }
+
+    private void createGraph(int mapWidth, int mapHeight, TiledMapTileLayer obstaclesLayer) {
+        this.aiTileGraph = new AiTileGraph();
+        for (int row = 0; row < mapHeight; row++) {
+            for (int column = 0; column < mapWidth; column++) {
+                Cell cell = obstaclesLayer.getCell(column, row);
+                if (cell == null) {
+                    // we found a cell that is walkable
+                    AiTile aiTile = new AiTile(column * mapTileWidth + halfMapTileWidth,
+                            row * mapTileHeight + halfMapTileHeight, mapTileWidth, mapTileHeight,
+                            column + ":" + row);
+
+                    AiTile leftNeighbour = getLeftNeighbour(column, row);
+                    AiTile bottomNeighbour = getBottomNeighbour(column, row);
+                    AiTile bottomLeftNeighbour = getBottomLeftNeighbour(column, row);
+                    AiTile bottomRightNeighbour = getBottomRightNeighbour(column, row, mapWidth);
+                    this.aiTileGraph.addAiTile(aiTile);
+
+                    connect(aiTile, leftNeighbour, true);
+                    connect(aiTile, bottomNeighbour, true);
+                    connect(aiTile, bottomLeftNeighbour, true);
+                    connect(aiTile, bottomRightNeighbour, true);
+
+                } else {
+                    // found a blocked cell -> ignore it
+                }
+            }
+        }
+    }
+
+    private void connect(AiTile aiTile, AiTile neighbour, boolean bidirectional) {
+        if (neighbour != null) {
+            aiTileGraph.connectAiTiles(aiTile, neighbour, bidirectional);
+        }
     }
 
     private AiTile getBottomNeighbour(int column, int row) {
@@ -150,13 +154,13 @@ public class AiTestScreen implements Screen, InputProcessor {
 
         // Draw all cities blue
         for (AiTile aiTile : aiTileGraph.aiTiles) {
-            aiTile.render(shapeRenderer, batch, font, false);
+            aiTile.render(shapeRenderer, false);
         }
         this.aiPath = agent.getCurrentPath();
 
         // Draw cities in path green
         for (AiTile aiTile : aiPath) {
-            aiTile.render(shapeRenderer, batch, font, true);
+            aiTile.render(shapeRenderer, true);
         }
 
         agent.step(delta);
@@ -247,8 +251,8 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     public Vector2 toWorldCoordinates(float x, float y) {
         Vector3 mouseInWorldPosition = this.camera.unproject(new Vector3(x, y, 0));
-        return new Vector2((float) Math.floor(mouseInWorldPosition.x / 64),
-                (float) Math.floor(mouseInWorldPosition.y / 64));
+        return new Vector2((float) Math.floor(mouseInWorldPosition.x / mapTileWidth),
+                (float) Math.floor(mouseInWorldPosition.y / mapTileHeight));
     }
 
     @Override

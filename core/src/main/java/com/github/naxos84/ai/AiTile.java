@@ -1,7 +1,5 @@
 package com.github.naxos84.ai;
 
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class AiTile {
@@ -39,7 +37,7 @@ public class AiTile {
         this.selected = !this.selected;
     }
 
-    public void render(ShapeRenderer shapeRenderer, SpriteBatch batch, BitmapFont font, boolean inPath) {
+    public void render(ShapeRenderer shapeRenderer, boolean inPath) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         if (inPath && !selected) {
             // green
@@ -50,16 +48,8 @@ public class AiTile {
             // blue
             shapeRenderer.setColor(.8f, .88f, .95f, 1);
         }
-        shapeRenderer.circle(x, y, 20);
+        shapeRenderer.circle(x, y, 4);
         shapeRenderer.end();
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.circle(x, y, 20);
-        shapeRenderer.end();
-
-        batch.begin();
-        font.draw(batch, name, x - 5, y + 5);
-        batch.end();
     }
 }
