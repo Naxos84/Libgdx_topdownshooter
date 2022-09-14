@@ -16,7 +16,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Queue;
 import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiTile;
-import com.github.naxos84.ai.AiTileConnection;
 import com.github.naxos84.ai.AiTileGraph;
 import com.github.naxos84.logger.FileLogger;
 

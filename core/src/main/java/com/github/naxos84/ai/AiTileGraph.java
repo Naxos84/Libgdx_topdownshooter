@@ -6,13 +6,14 @@ import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
 public class AiTileGraph implements IndexedGraph<AiTile> {
     private AiTileHeuristic aiTileHeuristic = new AiTileHeuristic();
     private Array<AiTile> aiTiles = new Array<>();
-    private Array<AiTileConnection> aiTileConnections = new Array<>();
+    private Array<Connection<AiTile>> aiTileConnections = new Array<>();
 
     /** Map of AiTiles to AiTileConnections starting in that AiTile. */
     private ObjectMap<AiTile, Array<Connection<AiTile>>> connectionsMap = new ObjectMap<>();
@@ -27,7 +28,7 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
     }
 
     private void connectAiTiles(AiTile fromTile, AiTile toTile, boolean bidirectional) {
-        AiTileConnection aiTileConnection = new AiTileConnection(fromTile, toTile);
+        Connection<AiTile> aiTileConnection = new AiTileConnection(fromTile, toTile);
         if (!connectionsMap.containsKey(fromTile)) {
             connectionsMap.put(fromTile, new Array<>());
         }
@@ -81,9 +82,13 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
 
     // extract it to a graph renderer
     public void renderConnections(ShapeRenderer shapeRenderer) {
-        for (AiTileConnection aiTileConnection : this.aiTileConnections) {
-            aiTileConnection.render(shapeRenderer);
+        shapeRenderer.begin(ShapeType.Filled);
+        shapeRenderer.setColor(0, 0, 0, 1);
+        for (Connection<AiTile> aiTileConnection : this.aiTileConnections) {
+            shapeRenderer.rectLine(aiTileConnection.getFromNode().x, aiTileConnection.getFromNode().y,
+                    aiTileConnection.getToNode().x, aiTileConnection.getToNode().y, 2);
         }
+        shapeRenderer.end();
     }
 
     // extract it to a graph renderer
@@ -149,6 +154,36 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
     }
 
     public void remove(AiTile clickedTile) {
+        disconnect(clickedTile);
+        aiTiles.removeValue(clickedTile, true);
+    }
+
+    private void disconnect(AiTile fromTile) {
+        Array<Connection<AiTile>> removedConnections = null;
+        if (connectionsMap.containsKey(fromTile)) {
+            removedConnections = connectionsMap.remove(fromTile);
+        }
+        if (removedConnections != null) {
+            for (Connection<AiTile> connection : removedConnections) {
+
+                disconnect(connection.getToNode(), connection.getFromNode());
+                this.aiTileConnections.removeValue(connection, false);
+
+            }
+        }
+    }
+
+    private void disconnect(AiTile toTile, AiTile fromTile) {
+        Array<Connection<AiTile>> connections = connectionsMap.get(toTile, null);
+        if (connections != null) {
+            for (Connection<AiTile> connection : connections) {
+                if (connection.getToNode() == fromTile) {
+                    // found a connection back
+                    this.aiTileConnections.removeValue(connection, false);
+                }
+            }
+        }
+
     }
 
 }

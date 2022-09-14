@@ -1,7 +1,6 @@
 package com.github.naxos84.ai;
 
 import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 public class AiTileConnection implements Connection<AiTile> {
@@ -14,13 +13,6 @@ public class AiTileConnection implements Connection<AiTile> {
         this.fromTile = fromTile;
         this.toTile = toTile;
         cost = Vector2.dst(fromTile.x, fromTile.y, toTile.x, toTile.y);
-    }
-
-    public void render(ShapeRenderer shapeRenderer) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.rectLine(fromTile.x, fromTile.y, toTile.x, toTile.y, 2);
-        shapeRenderer.end();
     }
 
     @Override
@@ -47,6 +39,21 @@ public class AiTileConnection implements Connection<AiTile> {
         sb.append(fromTile).append("->").append(toTile);
 
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof AiTileConnection) {
+            AiTileConnection connection = (AiTileConnection) obj;
+            boolean result = connection.fromTile == fromTile && connection.toTile == toTile;
+
+            return result;
+        } else {
+            return false;
+        }
     }
 
 }
