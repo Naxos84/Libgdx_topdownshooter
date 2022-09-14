@@ -143,3 +143,11 @@ Thumbs.db
 *~
 *.*#
 *#*#
+
+##Log
+*[Ll]og.txt
+*[Ll]og.log
+
+
+##Tiled
+*.tiled-session

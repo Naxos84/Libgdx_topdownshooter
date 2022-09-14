@@ -62,4 +62,9 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
         return new Array<>(0);
     }
 
+    @Override
+    public String toString() {
+        return "AiTileGraph [aiTileConnections=" + aiTileConnections + ", aiTiles=" + aiTiles + "]";
+    }
+
 }

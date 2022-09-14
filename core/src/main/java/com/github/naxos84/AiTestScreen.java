@@ -18,6 +18,7 @@ import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiTile;
 import com.github.naxos84.ai.AiTileConnection;
 import com.github.naxos84.ai.AiTileGraph;
+import com.github.naxos84.logger.FileLogger;
 
 public class AiTestScreen implements Screen, InputProcessor {
 
@@ -41,13 +42,16 @@ public class AiTestScreen implements Screen, InputProcessor {
     private Integer mapWidth;
     private Integer mapHeight;
 
+    private FileLogger logger = new FileLogger();
+
     @Override
     public void show() {
+        logger.log("Showing AITest Screen");
         Gdx.input.setInputProcessor(this);
         this.map = mapLoader.load("tiled/aitest.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map);
-        int mapWidth = map.getProperties().get("width", Integer.class);
-        int mapHeight = map.getProperties().get("height", Integer.class);
+        this.mapWidth = map.getProperties().get("width", Integer.class);
+        this.mapHeight = map.getProperties().get("height", Integer.class);
         this.mapTileWidth = map.getProperties().get("tilewidth", Integer.class);
         this.mapTileHeight = map.getProperties().get("tileheight", Integer.class);
         this.halfMapTileWidth = mapTileWidth / 2f;
@@ -68,7 +72,7 @@ public class AiTestScreen implements Screen, InputProcessor {
 
         aiPath = aiTileGraph.findPath(startTile, targetTile);
         agent = new Agent(aiTileGraph, startTile);
-        agent.setGoal(targetTile);
+        // agent.setGoal(targetTile);
 
     }
 
@@ -102,7 +106,7 @@ public class AiTestScreen implements Screen, InputProcessor {
     }
 
     private void connect(AiTile aiTile, AiTile neighbour, boolean bidirectional) {
-        if (neighbour != null) {
+        if (aiTile != null && neighbour != null) {
             aiTileGraph.connectAiTiles(aiTile, neighbour, bidirectional);
         }
     }
@@ -175,8 +179,10 @@ public class AiTestScreen implements Screen, InputProcessor {
         this.aiPath = agent.getCurrentPath();
 
         // Draw cities in path green
-        for (AiTile aiTile : aiPath) {
-            aiTile.render(shapeRenderer, true);
+        if (aiPath != null) {
+            for (AiTile aiTile : aiPath) {
+                aiTile.render(shapeRenderer, true);
+            }
         }
 
         agent.step(delta);
@@ -266,7 +272,7 @@ public class AiTestScreen implements Screen, InputProcessor {
 
             }
         } else {
-        this.selectTile(clickedTile);
+            this.selectTile(clickedTile);
         }
         return false;
     }

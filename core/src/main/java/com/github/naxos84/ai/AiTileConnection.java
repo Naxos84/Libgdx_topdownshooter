@@ -41,4 +41,12 @@ public class AiTileConnection implements Connection<AiTile> {
         return toTile;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(fromTile).append("->").append(toTile);
+
+        return sb.toString();
+    }
+
 }

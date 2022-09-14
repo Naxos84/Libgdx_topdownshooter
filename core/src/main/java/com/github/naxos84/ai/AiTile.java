@@ -52,4 +52,11 @@ public class AiTile {
         shapeRenderer.end();
 
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(x).append(":").append(y);
+        return sb.toString();
+    }
 }
