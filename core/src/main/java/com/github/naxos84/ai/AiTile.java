@@ -2,10 +2,10 @@ package com.github.naxos84.ai;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
-public class AiTile {
+import squidpony.squidmath.Coord;
 
-    float x;
-    float y;
+public class AiTile extends Coord {
+
     float width;
     float height;
 
@@ -14,8 +14,7 @@ public class AiTile {
     boolean selected;
 
     public AiTile(float x, float y, float width, float height, String name) {
-        this.x = x;
-        this.y = y;
+        super(Math.round(x), Math.round(y));
         this.width = width;
         this.height = height;
         this.name = name;

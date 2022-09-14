@@ -1,13 +1,15 @@
 package com.github.naxos84.ai;
 
-import com.badlogic.gdx.ai.pfa.GraphPath;
+import java.util.Date;
+import java.util.List;
+
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 
 public class Agent {
 
-    AiTileGraph aiTileGraph;
+    AiGraph aiTileGraph;
 
     float x;
     float y;
@@ -19,9 +21,11 @@ public class Agent {
     AiTile previousAiTile;
     Queue<AiTile> pathQueue = new Queue<>();
 
-    private GraphPath<AiTile> graphPath;
+    private List<AiTile> graphPath;
 
-    public Agent(AiTileGraph aiTileGraph, int startX, int startY) {
+    long startTime;
+
+    public Agent(AiGraph aiTileGraph, int startX, int startY) {
         this.aiTileGraph = aiTileGraph;
         AiTile start = aiTileGraph.findTileByGridPosition(startX, startY);
         this.x = start.x;
@@ -51,6 +55,7 @@ public class Agent {
      * Set the goal tile, calculate a path, and start moving.
      */
     public void setGoal(AiTile goal) {
+        startTime = new Date().getTime();
         if (goal == null) {
             return;
         }
@@ -64,8 +69,9 @@ public class Agent {
             this.graphPath = aiTileGraph.findPath(previousAiTile, goal);
             pathQueue.clear();
         }
+        System.out.println("Found path with " + graphPath.size() + " nodes");
 
-        for (int i = 1; i < graphPath.getCount(); i++) {
+        for (int i = 1; i < graphPath.size(); i++) {
             pathQueue.addLast(graphPath.get(i));
         }
         setSpeedToNextAiTile();
@@ -120,9 +126,11 @@ public class Agent {
      */
     private void reachDestination() {
         direction.set(0, 0);
+        long now = new Date().getTime();
+        System.out.println("Took " + (now - startTime) / 1000 + " seconds");
     }
 
-    public GraphPath<AiTile> getCurrentPath() {
+    public List<AiTile> getCurrentPath() {
         return graphPath;
     }
 }

@@ -1,9 +1,10 @@
 package com.github.naxos84;
 
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -15,8 +16,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Queue;
 import com.github.naxos84.ai.Agent;
+import com.github.naxos84.ai.AiGraph;
 import com.github.naxos84.ai.AiTile;
-import com.github.naxos84.ai.AiTileGraph;
 import com.github.naxos84.logger.FileLogger;
 
 public class AiTestScreen implements Screen, InputProcessor {
@@ -26,12 +27,13 @@ public class AiTestScreen implements Screen, InputProcessor {
     OrthogonalTiledMapRenderer mapRenderer;
     OrthographicCamera camera;
 
-    AiTileGraph aiTileGraph;
     ShapeRenderer shapeRenderer;
-    GraphPath<AiTile> aiPath;
+    List<AiTile> aiPath;
+
+    AiGraph uGraph;
 
     AiTile selectedTile = null;
-    Queue<AiTile> selectedTiles = new Queue<AiTile>(2);
+    Queue<AiTile> selectedTiles = new Queue<>(2);
 
     Agent agent;
     private Integer mapTileWidth;
@@ -67,12 +69,12 @@ public class AiTestScreen implements Screen, InputProcessor {
 
         createGraph(mapWidth, mapHeight, obstaclesLayer);
 
-        agent = new Agent(aiTileGraph, 0, 0);
+        agent = new Agent(uGraph, 0, 0);
 
     }
 
     private void createGraph(int mapWidth, int mapHeight, TiledMapTileLayer obstaclesLayer) {
-        this.aiTileGraph = new AiTileGraph();
+        this.uGraph = new AiGraph();
         for (int row = 0; row < mapHeight; row++) {
             for (int column = 0; column < mapWidth; column++) {
                 Cell cell = obstaclesLayer.getCell(column, row);
@@ -82,16 +84,15 @@ public class AiTestScreen implements Screen, InputProcessor {
                             row * mapTileHeight + halfMapTileHeight, mapTileWidth, mapTileHeight,
                             column + ":" + row);
 
-                    AiTile leftNeighbour = this.aiTileGraph.getLeftNeighbour(column, row);
-                    AiTile bottomNeighbour = this.aiTileGraph.getBottomNeighbour(column, row);
-                    AiTile bottomLeftNeighbour = this.aiTileGraph.getBottomLeftNeighbour(column, row);
-                    AiTile bottomRightNeighbour = this.aiTileGraph.getBottomRightNeighbour(column, row, mapWidth);
-                    this.aiTileGraph.addAiTile(aiTile);
-
-                    this.aiTileGraph.connect(aiTile, leftNeighbour, true);
-                    this.aiTileGraph.connect(aiTile, bottomNeighbour, true);
-                    this.aiTileGraph.connect(aiTile, bottomLeftNeighbour, true);
-                    this.aiTileGraph.connect(aiTile, bottomRightNeighbour, true);
+                    AiTile leftNeighbour = this.uGraph.getLeftNeighbour(column, row);
+                    AiTile bottomNeighbour = this.uGraph.getBottomNeighbour(column, row);
+                    AiTile bottomLeftNeighbour = this.uGraph.getBottomLeftNeighbour(column, row);
+                    AiTile bottomRightNeighbour = this.uGraph.getBottomRightNeighbour(column, row, mapWidth);
+                    uGraph.addVertex(aiTile);
+                    uGraph.connect(aiTile, leftNeighbour);
+                    uGraph.connect(aiTile, bottomNeighbour);
+                    uGraph.connect(aiTile, bottomLeftNeighbour);
+                    uGraph.connect(aiTile, bottomRightNeighbour);
 
                 } else {
                     // found a blocked cell -> ignore it
@@ -104,8 +105,8 @@ public class AiTestScreen implements Screen, InputProcessor {
     public void render(float delta) {
         mapRenderer.setView(camera);
         mapRenderer.render();
-        aiTileGraph.renderConnections(shapeRenderer);
-        aiTileGraph.renderTiles(shapeRenderer, false);
+        uGraph.renderConnections(shapeRenderer);
+        uGraph.renderTiles(shapeRenderer, false);
 
         this.aiPath = agent.getCurrentPath();
 
@@ -182,25 +183,25 @@ public class AiTestScreen implements Screen, InputProcessor {
         Vector2 clickedWorldCoordinate = toWorldCoordinates(screenX, screenY);
         int x = (int) clickedWorldCoordinate.x;
         int y = (int) clickedWorldCoordinate.y;
-        AiTile clickedTile = this.aiTileGraph.findTileByGridPosition(x, y);
+        AiTile clickedTile = this.uGraph.findTileByGridPosition(x, y);
         if (button == 1) {
             if (clickedTile == null) {
                 // no tile exists yet --> door closed
                 clickedTile = new AiTile(x * mapTileWidth + halfMapTileWidth, y * mapTileHeight + halfMapTileHeight,
                         mapTileWidth, mapTileHeight, x + ":" + y);
-                this.aiTileGraph.addAiTile(clickedTile);
-                AiTile topNeighour = this.aiTileGraph.getTopNeighbur(x, y, mapHeight);
-                AiTile bottomNeighbour = this.aiTileGraph.getBottomNeighbour(x, y);
-                AiTile leftNeighbour = this.aiTileGraph.getLeftNeighbour(x, y);
-                AiTile rightNeighbour = this.aiTileGraph.getRightNeighbour(x, y, mapWidth);
-                this.aiTileGraph.connect(topNeighour, clickedTile, true);
-                this.aiTileGraph.connect(bottomNeighbour, clickedTile, true);
-                this.aiTileGraph.connect(leftNeighbour, clickedTile, true);
-                this.aiTileGraph.connect(rightNeighbour, clickedTile, true);
+                this.uGraph.addVertex(clickedTile);
+                AiTile topNeighbour = this.uGraph.getTopNeighbur(x, y, mapHeight);
+                AiTile bottomNeighbour = this.uGraph.getBottomNeighbour(x, y);
+                AiTile leftNeighbour = this.uGraph.getLeftNeighbour(x, y);
+                AiTile rightNeighbour = this.uGraph.getRightNeighbour(x, y, mapWidth);
+                this.uGraph.connect(clickedTile, topNeighbour);
+                this.uGraph.connect(clickedTile, bottomNeighbour);
+                this.uGraph.connect(clickedTile, leftNeighbour);
+                this.uGraph.connect(clickedTile, rightNeighbour);
 
             } else {
                 // existing tile --> open door
-                this.aiTileGraph.remove(clickedTile);
+                this.uGraph.removeVertex(clickedTile);
 
             }
         } else {
