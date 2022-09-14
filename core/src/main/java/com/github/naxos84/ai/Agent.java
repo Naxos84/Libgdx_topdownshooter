@@ -21,8 +21,9 @@ public class Agent {
 
     private GraphPath<AiTile> graphPath;
 
-    public Agent(AiTileGraph aiTileGraph, AiTile start) {
+    public Agent(AiTileGraph aiTileGraph, int startX, int startY) {
         this.aiTileGraph = aiTileGraph;
+        AiTile start = aiTileGraph.findTileByGridPosition(startX, startY);
         this.x = start.x;
         this.y = start.y;
         this.previousAiTile = start;

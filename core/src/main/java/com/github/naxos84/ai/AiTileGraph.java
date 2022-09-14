@@ -26,7 +26,7 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
         aiTiles.add(aiTile);
     }
 
-    public void connectAiTiles(AiTile fromTile, AiTile toTile, boolean bidirectional) {
+    private void connectAiTiles(AiTile fromTile, AiTile toTile, boolean bidirectional) {
         AiTileConnection aiTileConnection = new AiTileConnection(fromTile, toTile);
         if (!connectionsMap.containsKey(fromTile)) {
             connectionsMap.put(fromTile, new Array<>());
@@ -92,6 +92,63 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
         for (AiTile aiTile : this.aiTiles) {
             aiTile.render(shapeRenderer, inPath);
         }
+    }
+
+    public void connect(AiTile aiTile, AiTile neighbour, boolean bidirectional) {
+        if (aiTile != null && neighbour != null) {
+            this.connectAiTiles(aiTile, neighbour, bidirectional);
+        }
+    }
+
+    public AiTile getBottomNeighbour(int column, int row) {
+        if (row == 0) {
+            return null;
+        }
+        return findTileByGridPosition(column, row - 1);
+    }
+
+    public AiTile getLeftNeighbour(int column, int row) {
+        if (column == 0) {
+            return null;
+        }
+        return findTileByGridPosition(column - 1, row);
+    }
+
+    public AiTile getRightNeighbour(int column, int row, int mapWidth) {
+        if (column == mapWidth) {
+            return null;
+        }
+        return findTileByGridPosition(column + 1, row);
+    }
+
+    public AiTile getTopNeighbur(int column, int row, int mapHeight) {
+        if (row == mapHeight) {
+            return null;
+        }
+        return findTileByGridPosition(column, row + 1);
+    }
+
+    public AiTile getBottomLeftNeighbour(int column, int row) {
+        if (row == 0 || column == 0) {
+            return null;
+        }
+        return findTileByGridPosition(column - 1, row - 1);
+    }
+
+    public AiTile getBottomRightNeighbour(int column, int row, int mapWidth) {
+        if (row == 0 || column == mapWidth) {
+            return null;
+        }
+        return findTileByGridPosition(column + 1, row - 1);
+    }
+
+    // TODO can we make this private?
+    public AiTile findTileByGridPosition(int column, int row) {
+        String name = column + ":" + row;
+        return this.findTileByName(name);
+    }
+
+    public void remove(AiTile clickedTile) {
     }
 
 }

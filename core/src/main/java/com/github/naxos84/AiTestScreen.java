@@ -67,12 +67,8 @@ public class AiTestScreen implements Screen, InputProcessor {
         shapeRenderer.setAutoShapeType(true);
 
         createGraph(mapWidth, mapHeight, obstaclesLayer);
-        AiTile startTile = findTileByGridPosition(0, 0);
-        AiTile targetTile = findTileByGridPosition(7, 13);
 
-        aiPath = aiTileGraph.findPath(startTile, targetTile);
-        agent = new Agent(aiTileGraph, startTile);
-        // agent.setGoal(targetTile);
+        agent = new Agent(aiTileGraph, 0, 0);
 
     }
 
@@ -87,75 +83,22 @@ public class AiTestScreen implements Screen, InputProcessor {
                             row * mapTileHeight + halfMapTileHeight, mapTileWidth, mapTileHeight,
                             column + ":" + row);
 
-                    AiTile leftNeighbour = getLeftNeighbour(column, row);
-                    AiTile bottomNeighbour = getBottomNeighbour(column, row);
-                    AiTile bottomLeftNeighbour = getBottomLeftNeighbour(column, row);
-                    AiTile bottomRightNeighbour = getBottomRightNeighbour(column, row, mapWidth);
+                    AiTile leftNeighbour = this.aiTileGraph.getLeftNeighbour(column, row);
+                    AiTile bottomNeighbour = this.aiTileGraph.getBottomNeighbour(column, row);
+                    AiTile bottomLeftNeighbour = this.aiTileGraph.getBottomLeftNeighbour(column, row);
+                    AiTile bottomRightNeighbour = this.aiTileGraph.getBottomRightNeighbour(column, row, mapWidth);
                     this.aiTileGraph.addAiTile(aiTile);
 
-                    connect(aiTile, leftNeighbour, true);
-                    connect(aiTile, bottomNeighbour, true);
-                    connect(aiTile, bottomLeftNeighbour, true);
-                    connect(aiTile, bottomRightNeighbour, true);
+                    this.aiTileGraph.connect(aiTile, leftNeighbour, true);
+                    this.aiTileGraph.connect(aiTile, bottomNeighbour, true);
+                    this.aiTileGraph.connect(aiTile, bottomLeftNeighbour, true);
+                    this.aiTileGraph.connect(aiTile, bottomRightNeighbour, true);
 
                 } else {
                     // found a blocked cell -> ignore it
                 }
             }
         }
-    }
-
-    private void connect(AiTile aiTile, AiTile neighbour, boolean bidirectional) {
-        if (aiTile != null && neighbour != null) {
-            aiTileGraph.connectAiTiles(aiTile, neighbour, bidirectional);
-        }
-    }
-
-    private AiTile getBottomNeighbour(int column, int row) {
-        if (row == 0) {
-            return null;
-        }
-        return findTileByGridPosition(column, row - 1);
-    }
-
-    private AiTile getLeftNeighbour(int column, int row) {
-        if (column == 0) {
-            return null;
-        }
-        return findTileByGridPosition(column - 1, row);
-    }
-
-    private AiTile getRightNeighbour(int column, int row, int mapWidth) {
-        if (column == mapWidth) {
-            return null;
-        }
-        return findTileByGridPosition(column + 1, row);
-    }
-
-    private AiTile getTopNeighbur(int column, int row, int mapHeight) {
-        if (row == mapHeight) {
-            return null;
-        }
-        return findTileByGridPosition(column, row + 1);
-    }
-
-    private AiTile getBottomLeftNeighbour(int column, int row) {
-        if (row == 0 || column == 0) {
-            return null;
-        }
-        return findTileByGridPosition(column - 1, row - 1);
-    }
-
-    private AiTile getBottomRightNeighbour(int column, int row, int mapWidth) {
-        if (row == 0 || column == mapWidth) {
-            return null;
-        }
-        return findTileByGridPosition(column + 1, row - 1);
-    }
-
-    private AiTile findTileByGridPosition(int column, int row) {
-        String name = column + ":" + row;
-        return aiTileGraph.findTileByName(name);
     }
 
     @Override
@@ -240,24 +183,25 @@ public class AiTestScreen implements Screen, InputProcessor {
         Vector2 clickedWorldCoordinate = toWorldCoordinates(screenX, screenY);
         int x = (int) clickedWorldCoordinate.x;
         int y = (int) clickedWorldCoordinate.y;
-        AiTile clickedTile = findTileByGridPosition(x, y);
+        AiTile clickedTile = this.aiTileGraph.findTileByGridPosition(x, y);
         if (button == 1) {
             if (clickedTile == null) {
                 // no tile exists yet --> door closed
                 clickedTile = new AiTile(x * mapTileWidth + halfMapTileWidth, y * mapTileHeight + halfMapTileHeight,
                         mapTileWidth, mapTileHeight, x + ":" + y);
                 this.aiTileGraph.addAiTile(clickedTile);
-                AiTile topNeighour = this.getTopNeighbur(x, y, mapHeight);
-                AiTile bottomNeighbour = this.getBottomNeighbour(x, y);
-                AiTile leftNeighbour = this.getLeftNeighbour(x, y);
-                AiTile rightNeighbour = this.getRightNeighbour(x, y, mapWidth);
-                connect(topNeighour, clickedTile, true);
-                connect(bottomNeighbour, clickedTile, true);
-                connect(leftNeighbour, clickedTile, true);
-                connect(rightNeighbour, clickedTile, true);
+                AiTile topNeighour = this.aiTileGraph.getTopNeighbur(x, y, mapHeight);
+                AiTile bottomNeighbour = this.aiTileGraph.getBottomNeighbour(x, y);
+                AiTile leftNeighbour = this.aiTileGraph.getLeftNeighbour(x, y);
+                AiTile rightNeighbour = this.aiTileGraph.getRightNeighbour(x, y, mapWidth);
+                this.aiTileGraph.connect(topNeighour, clickedTile, true);
+                this.aiTileGraph.connect(bottomNeighbour, clickedTile, true);
+                this.aiTileGraph.connect(leftNeighbour, clickedTile, true);
+                this.aiTileGraph.connect(rightNeighbour, clickedTile, true);
 
             } else {
                 // existing tile --> open door
+                this.aiTileGraph.remove(clickedTile);
 
             }
         } else {
