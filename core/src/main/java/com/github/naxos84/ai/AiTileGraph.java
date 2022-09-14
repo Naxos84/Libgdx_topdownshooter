@@ -5,16 +5,17 @@ import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
 public class AiTileGraph implements IndexedGraph<AiTile> {
-    public AiTileHeuristic aiTileHeuristic = new AiTileHeuristic();
-    public Array<AiTile> aiTiles = new Array<>();
-    public Array<AiTileConnection> aiTileConnections = new Array<>();
+    private AiTileHeuristic aiTileHeuristic = new AiTileHeuristic();
+    private Array<AiTile> aiTiles = new Array<>();
+    private Array<AiTileConnection> aiTileConnections = new Array<>();
 
     /** Map of AiTiles to AiTileConnections starting in that AiTile. */
-    ObjectMap<AiTile, Array<Connection<AiTile>>> connectionsMap = new ObjectMap<>();
+    private ObjectMap<AiTile, Array<Connection<AiTile>>> connectionsMap = new ObjectMap<>();
 
     private int lastNodeIndex = 0;
 
@@ -65,6 +66,32 @@ public class AiTileGraph implements IndexedGraph<AiTile> {
     @Override
     public String toString() {
         return "AiTileGraph [aiTileConnections=" + aiTileConnections + ", aiTiles=" + aiTiles + "]";
+    }
+
+    public AiTile findTileByName(String name) {
+
+        for (AiTile aiTile : this.aiTiles) {
+            if (aiTile.name.equals(name)) {
+                return aiTile;
+            }
+        }
+
+        return null;
+    }
+
+    // extract it to a graph renderer
+    public void renderConnections(ShapeRenderer shapeRenderer) {
+        for (AiTileConnection aiTileConnection : this.aiTileConnections) {
+            aiTileConnection.render(shapeRenderer);
+        }
+    }
+
+    // extract it to a graph renderer
+    public void renderTiles(ShapeRenderer shapeRenderer, boolean inPath) {
+        // Draw all cities blue
+        for (AiTile aiTile : this.aiTiles) {
+            aiTile.render(shapeRenderer, inPath);
+        }
     }
 
 }

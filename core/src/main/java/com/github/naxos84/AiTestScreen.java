@@ -155,27 +155,16 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     private AiTile findTileByGridPosition(int column, int row) {
         String name = column + ":" + row;
-        for (AiTile aiTile : aiTileGraph.aiTiles) {
-            if (aiTile.name.equals(name)) {
-                return aiTile;
-            }
-        }
-
-        return null;
+        return aiTileGraph.findTileByName(name);
     }
 
     @Override
     public void render(float delta) {
         mapRenderer.setView(camera);
         mapRenderer.render();
-        for (AiTileConnection aiTileConnection : aiTileGraph.aiTileConnections) {
-            aiTileConnection.render(shapeRenderer);
-        }
+        aiTileGraph.renderConnections(shapeRenderer);
+        aiTileGraph.renderTiles(shapeRenderer, false);
 
-        // Draw all cities blue
-        for (AiTile aiTile : aiTileGraph.aiTiles) {
-            aiTile.render(shapeRenderer, false);
-        }
         this.aiPath = agent.getCurrentPath();
 
         // Draw cities in path green
