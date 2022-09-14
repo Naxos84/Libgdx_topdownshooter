@@ -14,7 +14,7 @@ public class SurvislandPlayer implements Collidable {
     private Rectangle collider;
     private Vector2 position;
     private float rotation;
-    private float movementSpeed = 5f;
+    private float movementSpeed = 200f;
 
     public SurvislandPlayer(TextureRegion textureRegion, int width, int height) {
         this.textureRegion = textureRegion;
@@ -81,13 +81,13 @@ public class SurvislandPlayer implements Collidable {
         this.position.set(x, y);
     }
 
-    public void move(Vector2 v) {
-        updatePosition(v);
+    public void move(Vector2 v, float delta) {
+        updatePosition(v, delta);
         updateCollider();
     }
 
-    private void updatePosition(Vector2 v) {
-        this.position.add(v.setLength(movementSpeed));
+    private void updatePosition(Vector2 v, float delta) {
+        this.position.add(v.setLength(movementSpeed * delta));
     }
 
     private void updateCollider() {

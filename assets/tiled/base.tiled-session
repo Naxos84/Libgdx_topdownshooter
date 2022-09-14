@@ -3,11 +3,19 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "base.tmx",
+    "activeFile": "aitest.tmx",
     "expandedProjectPaths": [
         "."
     ],
     "fileStates": {
+        "aitest.tmx": {
+            "scale": 0.7758333333333333,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 456.9280343716434,
+                "y": 480.1288936627283
+            }
+        },
         "base.tmx": {
             "scale": 1,
             "selectedLayer": 6,
@@ -33,13 +41,15 @@
     "map.width": 15,
     "openFiles": [
         "tilesheet_complete.tsx",
-        "base.tmx"
+        "base.tmx",
+        "aitest.tmx"
     ],
     "project": "base.tiled-project",
     "property.type": "bool",
     "recentFiles": [
         "tilesheet_complete.tsx",
         "base.tmx",
+        "aitest.tmx",
         "map_tiles.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",

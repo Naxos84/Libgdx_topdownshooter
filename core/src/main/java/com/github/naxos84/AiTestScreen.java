@@ -15,6 +15,9 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Queue;
+import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiTile;
 import com.github.naxos84.ai.AiTileConnection;
 import com.github.naxos84.ai.AiTileGraph;
@@ -31,6 +34,11 @@ public class AiTestScreen implements Screen, InputProcessor {
     SpriteBatch batch;
     BitmapFont font;
     GraphPath<AiTile> aiPath;
+
+    AiTile selectedTile = null;
+    Queue<AiTile> selectedTiles = new Queue<AiTile>(2);
+
+    Agent agent;
 
     @Override
     public void show() {
@@ -88,6 +96,8 @@ public class AiTestScreen implements Screen, InputProcessor {
         AiTile targetTile = findTileByGridPosition(7, 13);
 
         aiPath = aiTileGraph.findPath(startTile, targetTile);
+        agent = new Agent(aiTileGraph, startTile);
+        agent.setGoal(targetTile);
 
     }
 
@@ -142,11 +152,15 @@ public class AiTestScreen implements Screen, InputProcessor {
         for (AiTile aiTile : aiTileGraph.aiTiles) {
             aiTile.render(shapeRenderer, batch, font, false);
         }
+        this.aiPath = agent.getCurrentPath();
 
         // Draw cities in path green
         for (AiTile aiTile : aiPath) {
             aiTile.render(shapeRenderer, batch, font, true);
         }
+
+        agent.step(delta);
+        agent.render(shapeRenderer);
 
     }
 
@@ -207,8 +221,16 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        Vector2 clickedWorldCoordinate = toWorldCoordinates(screenX, screenY);
+        AiTile clickedTile = findTileByGridPosition((int) clickedWorldCoordinate.x, (int) clickedWorldCoordinate.y);
+
+        this.selectTile(clickedTile);
         // TODO Auto-generated method stub
         return false;
+    }
+
+    private void selectTile(AiTile clickedTile) {
+        agent.setGoal(clickedTile);
     }
 
     @Override
@@ -219,21 +241,14 @@ public class AiTestScreen implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        Vector3 mouseInWorlPosition = this.camera.unproject(new Vector3(screenX, screenY, 0));
-        Vector2 mouseInWorldCoordinates = toWorldCoordinates(mouseInWorlPosition.x, mouseInWorlPosition.y);
-
-        System.out.println(mouseInWorldCoordinates.x + ":" + mouseInWorldCoordinates.y);
-        AiTile startTile = findTileByGridPosition(0, 0);
-        AiTile targetTile = findTileByGridPosition((int) mouseInWorldCoordinates.x, (int) mouseInWorldCoordinates.y);
-        if (targetTile != null) {
-            aiPath = aiTileGraph.findPath(startTile, targetTile);
-        }
         // TODO Auto-generated method stub
         return false;
     }
 
     public Vector2 toWorldCoordinates(float x, float y) {
-        return new Vector2((float) Math.floor(x / 64), (float) Math.floor(y / 64));
+        Vector3 mouseInWorldPosition = this.camera.unproject(new Vector3(x, y, 0));
+        return new Vector2((float) Math.floor(mouseInWorldPosition.x / 64),
+                (float) Math.floor(mouseInWorldPosition.y / 64));
     }
 
     @Override

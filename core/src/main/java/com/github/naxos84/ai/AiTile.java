@@ -13,6 +13,7 @@ public class AiTile {
 
     public String name;
     int index;
+    boolean selected;
 
     public AiTile(float x, float y, float width, float height, String name) {
         this.x = x;
@@ -26,11 +27,25 @@ public class AiTile {
         this.index = index;
     }
 
+    public int getIndex() {
+        return index;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void toggleSelection() {
+        this.selected = !this.selected;
+    }
+
     public void render(ShapeRenderer shapeRenderer, SpriteBatch batch, BitmapFont font, boolean inPath) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        if (inPath) {
+        if (inPath && !selected) {
             // green
             shapeRenderer.setColor(.57f, .76f, .48f, 1);
+        } else if (selected) {
+            shapeRenderer.setColor(0.57f, 0f, 0f, 1f);
         } else {
             // blue
             shapeRenderer.setColor(.8f, .88f, .95f, 1);

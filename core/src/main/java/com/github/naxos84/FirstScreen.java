@@ -23,6 +23,8 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	private final boolean debug = false;
 
+	private float delta;
+
 	private OrthographicCamera camera;
 
 	Texture characterTexture;
@@ -59,6 +61,7 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	@Override
 	public void render(float delta) {
+		this.delta = delta;
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 0.2f);
 
@@ -124,11 +127,11 @@ public class FirstScreen implements Screen, InputProcessor {
 			horizontalMovement.add(Vector2.X);
 		}
 
-		this.sPlayer.move(horizontalMovement);
+		this.sPlayer.move(horizontalMovement, delta);
 		checkCollision();
 		if (this.isColliding) {
 			horizontalMovement.rotateDeg(180);
-			this.sPlayer.move(horizontalMovement);
+			this.sPlayer.move(horizontalMovement, delta);
 		}
 
 		Vector2 verticalMovement = new Vector2();
@@ -139,12 +142,12 @@ public class FirstScreen implements Screen, InputProcessor {
 		if (Gdx.input.isKeyPressed(Keys.S) || Gdx.input.isKeyPressed(Keys.DOWN)) {
 			verticalMovement.sub(Vector2.Y);
 		}
-		this.sPlayer.move(verticalMovement);
+		this.sPlayer.move(verticalMovement, delta);
 		checkCollision();
 
 		if (this.isColliding) {
 			verticalMovement.rotateDeg(180);
-			this.sPlayer.move(verticalMovement);
+			this.sPlayer.move(verticalMovement, delta);
 		}
 
 		hasMoved = !horizontalMovement.isZero() || !verticalMovement.isZero();
