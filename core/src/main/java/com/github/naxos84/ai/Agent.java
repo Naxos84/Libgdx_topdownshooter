@@ -1,6 +1,5 @@
 package com.github.naxos84.ai;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -26,7 +25,6 @@ public class Agent {
     private List<AiTile> graphPath;
     public boolean isIdle = true;
 
-    private long startTime;
     private float wanderingTime = 0f;
     private AiTile currentGoal;
 
@@ -73,7 +71,6 @@ public class Agent {
     public void setGoal(AiTile goal) {
         isIdle = false;
         this.currentGoal = goal;
-        startTime = new Date().getTime();
         if (goal == null) {
             return;
         }
@@ -159,7 +156,6 @@ public class Agent {
     private void reachDestination() {
         direction.set(0, 0);
         this.isIdle = true;
-        long now = new Date().getTime();
     }
 
     public List<AiTile> getCurrentPath() {

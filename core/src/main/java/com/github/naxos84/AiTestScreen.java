@@ -8,10 +8,9 @@ import java.util.Random;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -20,7 +19,6 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Queue;
 import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiGraph;
 import com.github.naxos84.ai.AiTile;
@@ -50,8 +48,6 @@ public class AiTestScreen implements Screen, InputProcessor {
     private float halfMapTileHeight;
     private Integer mapWidth;
     private Integer mapHeight;
-
-    List<AiTile> doorsToClose = new ArrayList<>();
 
     private FileLogger logger = new FileLogger();
 
@@ -87,9 +83,6 @@ public class AiTestScreen implements Screen, InputProcessor {
         for (int i = 0; i < 100; i++) {
             spawnZ();
         }
-
-        // agents.add(new Agent(uGraph, 0, 0));
-        // agents.add(new Agent(uGraph, 0, 0));
 
     }
 
@@ -137,51 +130,14 @@ public class AiTestScreen implements Screen, InputProcessor {
         uGraph.renderConnections(shapeRenderer);
         // uGraph.renderTiles(shapeRenderer, false);
 
-        boolean tileHasBeenRemoved = false;
-        doorsToClose.forEach(d -> d.canBeRemoved = true);
-        doorsToClose.forEach(d -> {
-            shapeRenderer.begin(ShapeType.Filled);
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.rect(d.x - 32, d.y - 32, 64f, 64f);
-            shapeRenderer.end();
-        });
         for (Agent agent : agents) {
             if (agent.isIdle) {
                 agent.setGoal(uGraph.getRandomTile());
             }
             agent.step(delta);
             agent.render(shapeRenderer);
-            Rectangle rect = new Rectangle();
-            doorsToClose.forEach(d -> {
-                rect.set(d.x - 32, d.y - 32, 64f, 64f);
-                if (rect.contains(agent.x, agent.y)) {
-                    d.canBeRemoved &= false;
-                }
-
-            });
 
         }
-        for (Iterator<AiTile> doorIterator = doorsToClose.iterator(); doorIterator.hasNext();) {
-            AiTile door = doorIterator.next();
-            if (door.canBeRemoved) {
-                tileHasBeenRemoved |= true;
-                uGraph.removeTile(door);
-                doorIterator.remove();
-            }
-        }
-        if (tileHasBeenRemoved) {
-            agents.forEach(Agent::recalculatePath);
-        }
-
-        // for each agent
-        // for each door
-        // if agent overlaps with a door
-        // do nothing
-        // else
-        // markDoorTobeClosed
-        // close all doors that are marked to be closed
-        // for each agent
-        // recalculatePath
     }
 
     @Override
@@ -254,8 +210,18 @@ public class AiTestScreen implements Screen, InputProcessor {
                 this.uGraph.addTile(clickedTile, Direction.TOP | Direction.BOTTOM | Direction.LEFT | Direction.RIGHT);
 
             } else {
-                doorsToClose.add(clickedTile);
-                // existing tile --> open door
+                Rectangle rect = new Rectangle(clickedTile.x, clickedTile.y, 64f, 64f);
+                boolean closeDoor = true;
+                for (Agent agent : agents) {
+                    if (rect.contains(agent.x, agent.y)) {
+                        closeDoor = false;
+                        break;
+                    }
+                }
+                if (closeDoor) {
+                    this.uGraph.removeTile(clickedTile);
+                    agents.forEach(Agent::recalculatePath);
+                }
 
             }
         } else {
