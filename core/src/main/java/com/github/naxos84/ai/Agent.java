@@ -9,21 +9,21 @@ import com.badlogic.gdx.utils.Queue;
 
 public class Agent {
 
-    AiGraph aiTileGraph;
+    private AiGraph aiTileGraph;
 
     float x;
     float y;
 
-    float movementSpeed = 100f;
+    private float movementSpeed = 100f;
 
-    Vector2 direction = new Vector2();
+    private Vector2 direction = new Vector2();
 
-    AiTile previousAiTile;
-    Queue<AiTile> pathQueue = new Queue<>();
+    private AiTile previousAiTile;
+    private Queue<AiTile> pathQueue = new Queue<>();
 
     private List<AiTile> graphPath;
 
-    long startTime;
+    private long startTime;
 
     public Agent(AiGraph aiTileGraph, int startX, int startY) {
         this.aiTileGraph = aiTileGraph;

@@ -11,15 +11,15 @@ import squidpony.squidai.graph.UndirectedGraph;
 
 public class AiGraph extends UndirectedGraph<AiTile> {
 
-    int mapWidth;
-    int mapHeight;
+    private int mapWidth;
+    private int mapHeight;
 
     public AiGraph(int width, int height) {
         mapWidth = width;
         mapHeight = height;
     }
 
-    Heuristic<AiTile> heuristic = new AiGraphHeuristic();
+    private Heuristic<AiTile> heuristic = new AiGraphHeuristic();
 
     public List<AiTile> findPath(AiTile startTile, AiTile targetTile) {
         return algorithms().findShortestPath(startTile, targetTile, heuristic);
