@@ -6,18 +6,16 @@ import squidpony.squidmath.Coord;
 
 public class AiTile extends Coord {
 
-    float width;
-    float height;
+    int gridX;
+    int gridY;
 
-    public String name;
     int index;
     boolean selected;
 
-    public AiTile(float x, float y, float width, float height, String name) {
+    public AiTile(float x, float y, int gridX, int gridY) {
         super(Math.round(x), Math.round(y));
-        this.width = width;
-        this.height = height;
-        this.name = name;
+        this.gridX = gridX;
+        this.gridY = gridY;
     }
 
     public void setIndex(int index) {

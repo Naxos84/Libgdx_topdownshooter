@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.Queue;
 import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiGraph;
 import com.github.naxos84.ai.AiTile;
+import com.github.naxos84.ai.Direction;
 import com.github.naxos84.logger.FileLogger;
 
 public class AiTestScreen implements Screen, InputProcessor {
@@ -74,26 +75,16 @@ public class AiTestScreen implements Screen, InputProcessor {
     }
 
     private void createGraph(int mapWidth, int mapHeight, TiledMapTileLayer obstaclesLayer) {
-        this.uGraph = new AiGraph();
+        this.uGraph = new AiGraph(mapWidth, mapHeight);
         for (int row = 0; row < mapHeight; row++) {
             for (int column = 0; column < mapWidth; column++) {
                 Cell cell = obstaclesLayer.getCell(column, row);
                 if (cell == null) {
                     // we found a cell that is walkable
                     AiTile aiTile = new AiTile(column * mapTileWidth + halfMapTileWidth,
-                            row * mapTileHeight + halfMapTileHeight, mapTileWidth, mapTileHeight,
-                            column + ":" + row);
-
-                    AiTile leftNeighbour = this.uGraph.getLeftNeighbour(column, row);
-                    AiTile bottomNeighbour = this.uGraph.getBottomNeighbour(column, row);
-                    AiTile bottomLeftNeighbour = this.uGraph.getBottomLeftNeighbour(column, row);
-                    AiTile bottomRightNeighbour = this.uGraph.getBottomRightNeighbour(column, row, mapWidth);
-                    uGraph.addVertex(aiTile);
-                    uGraph.connect(aiTile, leftNeighbour);
-                    uGraph.connect(aiTile, bottomNeighbour);
-                    uGraph.connect(aiTile, bottomLeftNeighbour);
-                    uGraph.connect(aiTile, bottomRightNeighbour);
-
+                            row * mapTileHeight + halfMapTileHeight, column, row);
+                    this.uGraph.addTile(aiTile,
+                            Direction.LEFT | Direction.BOTTOM | Direction.BOTTOM_LEFT | Direction.BOTTOM_RIGHT);
                 } else {
                     // found a blocked cell -> ignore it
                 }
@@ -187,17 +178,9 @@ public class AiTestScreen implements Screen, InputProcessor {
         if (button == 1) {
             if (clickedTile == null) {
                 // no tile exists yet --> door closed
-                clickedTile = new AiTile(x * mapTileWidth + halfMapTileWidth, y * mapTileHeight + halfMapTileHeight,
-                        mapTileWidth, mapTileHeight, x + ":" + y);
-                this.uGraph.addVertex(clickedTile);
-                AiTile topNeighbour = this.uGraph.getTopNeighbur(x, y, mapHeight);
-                AiTile bottomNeighbour = this.uGraph.getBottomNeighbour(x, y);
-                AiTile leftNeighbour = this.uGraph.getLeftNeighbour(x, y);
-                AiTile rightNeighbour = this.uGraph.getRightNeighbour(x, y, mapWidth);
-                this.uGraph.connect(clickedTile, topNeighbour);
-                this.uGraph.connect(clickedTile, bottomNeighbour);
-                this.uGraph.connect(clickedTile, leftNeighbour);
-                this.uGraph.connect(clickedTile, rightNeighbour);
+                clickedTile = new AiTile(x * mapTileWidth + halfMapTileWidth, y * mapTileHeight + halfMapTileHeight, x,
+                        y);
+                this.uGraph.addTile(clickedTile, Direction.TOP | Direction.BOTTOM | Direction.LEFT | Direction.RIGHT);
 
             } else {
                 // existing tile --> open door

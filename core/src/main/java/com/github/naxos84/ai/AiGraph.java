@@ -11,6 +11,14 @@ import squidpony.squidai.graph.UndirectedGraph;
 
 public class AiGraph extends UndirectedGraph<AiTile> {
 
+    int mapWidth;
+    int mapHeight;
+
+    public AiGraph(int width, int height) {
+        mapWidth = width;
+        mapHeight = height;
+    }
+
     Heuristic<AiTile> heuristic = new AiGraphHeuristic();
 
     public List<AiTile> findPath(AiTile startTile, AiTile targetTile) {
@@ -87,19 +95,48 @@ public class AiGraph extends UndirectedGraph<AiTile> {
 
     // TODO can we make this private?
     public AiTile findTileByGridPosition(int column, int row) {
-        String name = column + ":" + row;
-        return this.findTileByName(name);
-    }
-
-    public AiTile findTileByName(String name) {
-
         for (AiTile aiTile : this.getVertices()) {
-            if (aiTile.name.equals(name)) {
+            if (aiTile.gridX == column && aiTile.gridY == row) {
                 return aiTile;
             }
         }
-
         return null;
+    }
+
+    public void addTile(AiTile tile, int i) {
+        this.addVertex(tile);
+
+        if ((Direction.TOP & i) > 0) {
+            AiTile topNeighbour = this.getTopNeighbur(tile.gridX, tile.gridY, mapHeight);
+            this.connect(tile, topNeighbour);
+        }
+        if ((Direction.TOP_LEFT & i) > 0) {
+            throw new UnsupportedOperationException("Top-left not implemented yet");
+        }
+        if ((Direction.LEFT & i) > 0) {
+            AiTile leftNeighbour = this.getLeftNeighbour(tile.gridX, tile.gridY);
+            this.connect(tile, leftNeighbour);
+        }
+        if ((Direction.BOTTOM_LEFT & i) > 0) {
+            AiTile bottomLeftNeighbour = this.getBottomLeftNeighbour(tile.gridX, tile.gridY);
+            this.connect(tile, bottomLeftNeighbour);
+        }
+        if ((Direction.BOTTOM & i) > 0) {
+            AiTile bottomNeighbour = this.getBottomNeighbour(tile.gridX, tile.gridY);
+            this.connect(tile, bottomNeighbour);
+        }
+        if ((Direction.BOTTOM_RIGHT & i) > 0) {
+            AiTile bottomRightNeighbour = this.getBottomRightNeighbour(tile.gridX, tile.gridY, mapWidth);
+            connect(tile, bottomRightNeighbour);
+        }
+        if ((Direction.RIGHT & i) > 0) {
+            AiTile rightNeighbour = this.getRightNeighbour(tile.gridX, tile.gridY, mapWidth);
+            this.connect(tile, rightNeighbour);
+        }
+        if ((Direction.TOP_RIGHT & i) > 0) {
+            throw new UnsupportedOperationException("Top-right not implemented yet");
+        }
+
     }
 
 }
