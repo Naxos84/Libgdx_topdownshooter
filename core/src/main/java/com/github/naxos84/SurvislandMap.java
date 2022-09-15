@@ -27,6 +27,8 @@ public class SurvislandMap {
     private Array<Wall> walls = new Array<>();
     private int width;
     private int height;
+    private int mapTileWidth;
+    private int mapTileHeight;
 
     public void loadMap(String fileName) {
         this.map = mapLoader.load(fileName);
@@ -42,6 +44,9 @@ public class SurvislandMap {
 
         this.width = mapWidth * CELL_SIZE;
         this.height = mapHeight * CELL_SIZE;
+
+        this.mapTileWidth = map.getProperties().get("tilewidth", Integer.class);
+        this.mapTileHeight = map.getProperties().get("tileheight", Integer.class);
     }
 
     private void loadWalls() {
@@ -106,6 +111,18 @@ public class SurvislandMap {
         }
     }
 
+    public void toggleDoorAt(Vector2 coordinates) {
+        this.toggleDoorAt(coordinates.x * mapTileWidth, coordinates.y * mapTileHeight);
+    }
+
+    public void toggleDoorAt(float x, float y) {
+        for (Wall wall : walls) {
+            if (wall.isDoor() && wall.getCollider().contains(x, y)) {
+                wall.setOpen(!wall.isOpen());
+            }
+        }
+    }
+
     public void renderWallsDebug(ShapeRenderer debugRenderer) {
         for (Wall wall : walls) {
             Rectangle wallCollider = wall.getCollider();
@@ -122,6 +139,14 @@ public class SurvislandMap {
             }
         }
         return false;
+    }
+
+    public float getTileWidth() {
+        return mapTileWidth;
+    }
+
+    public float getTileHeight() {
+        return mapTileHeight;
     }
 
 }

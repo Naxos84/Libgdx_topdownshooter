@@ -248,8 +248,16 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		Vector2 mouseCoordinates = toWorldCoordinates(screenX, screenY);
+		sMap.toggleDoorAt(mouseCoordinates);
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public Vector2 toWorldCoordinates(float x, float y) {
+		Vector3 mouseInWorldPosition = this.camera.unproject(new Vector3(x, y, 0));
+		return new Vector2((float) Math.floor(mouseInWorldPosition.x / this.sMap.getTileWidth()),
+				(float) Math.floor(mouseInWorldPosition.y / this.sMap.getTileHeight()));
 	}
 
 	@Override
