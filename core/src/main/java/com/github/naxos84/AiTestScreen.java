@@ -60,6 +60,11 @@ public class AiTestScreen implements Screen, InputProcessor {
         logger.log("Showing AITest Screen");
         Gdx.input.setInputProcessor(this);
         this.map = mapLoader.load("tiled/aitest.tmx");
+        for (MapLayer layer : map.getLayers()) {
+            if (Boolean.TRUE == layer.getProperties().get("skipRender", Boolean.class)) {
+                layer.setVisible(false);
+            }
+        }
         mapRenderer = new OrthogonalTiledMapRenderer(map);
         this.mapWidth = map.getProperties().get("width", Integer.class);
         this.mapHeight = map.getProperties().get("height", Integer.class);

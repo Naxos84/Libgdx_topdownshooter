@@ -40,6 +40,9 @@
 </data>
  </layer>
  <layer id="4" name="Z_Spawn" width="15" height="15" opacity="0.53">
+  <properties>
+   <property name="skipRender" type="bool" value="true"/>
+  </properties>
   <data encoding="csv">
 13,13,0,0,0,0,0,13,0,0,0,0,0,0,0,
 13,13,0,0,0,0,0,13,0,0,0,0,0,0,0,
