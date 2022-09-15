@@ -1,17 +1,23 @@
 package com.github.naxos84;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Queue;
@@ -21,6 +27,8 @@ import com.github.naxos84.ai.AiTile;
 import com.github.naxos84.ai.Direction;
 import com.github.naxos84.logger.FileLogger;
 
+import squidpony.squidmath.Coord;
+
 public class AiTestScreen implements Screen, InputProcessor {
 
     TmxMapLoader mapLoader = new TmxMapLoader();
@@ -29,20 +37,21 @@ public class AiTestScreen implements Screen, InputProcessor {
     OrthographicCamera camera;
 
     ShapeRenderer shapeRenderer;
-    List<AiTile> aiPath;
+    private Random random = new Random();
 
     AiGraph uGraph;
 
-    AiTile selectedTile = null;
-    Queue<AiTile> selectedTiles = new Queue<>(2);
+    List<Agent> agents = new ArrayList<>();
+    List<Coord> zSpawns = new ArrayList<>();
 
-    Agent agent;
     private Integer mapTileWidth;
     private Integer mapTileHeight;
     private float halfMapTileWidth;
     private float halfMapTileHeight;
     private Integer mapWidth;
     private Integer mapHeight;
+
+    List<AiTile> doorsToClose = new ArrayList<>();
 
     private FileLogger logger = new FileLogger();
 
@@ -69,9 +78,33 @@ public class AiTestScreen implements Screen, InputProcessor {
         shapeRenderer.setAutoShapeType(true);
 
         createGraph(mapWidth, mapHeight, obstaclesLayer);
+        getZSpawns();
+        for (int i = 0; i < 100; i++) {
+            spawnZ();
+        }
 
-        agent = new Agent(uGraph, 0, 0);
+        // agents.add(new Agent(uGraph, 0, 0));
+        // agents.add(new Agent(uGraph, 0, 0));
 
+    }
+
+    private void spawnZ() {
+        int gridSpawnLocation = random.nextInt(0, zSpawns.size());
+        Coord coord = zSpawns.get(gridSpawnLocation);
+        agents.add(new Agent(uGraph, coord.x, coord.y));
+
+    }
+
+    private void getZSpawns() {
+        TiledMapTileLayer zspawnLayer = (TiledMapTileLayer) map.getLayers().get("Z_Spawn");
+        for (int row = 0; row < mapHeight; row++) {
+            for (int column = 0; column < mapWidth; column++) {
+                Cell cell = zspawnLayer.getCell(column, row);
+                if (cell != null) {
+                    zSpawns.add(Coord.get(column, row));
+                }
+            }
+        }
     }
 
     private void createGraph(int mapWidth, int mapHeight, TiledMapTileLayer obstaclesLayer) {
@@ -97,20 +130,53 @@ public class AiTestScreen implements Screen, InputProcessor {
         mapRenderer.setView(camera);
         mapRenderer.render();
         uGraph.renderConnections(shapeRenderer);
-        uGraph.renderTiles(shapeRenderer, false);
+        // uGraph.renderTiles(shapeRenderer, false);
 
-        this.aiPath = agent.getCurrentPath();
+        boolean tileHasBeenRemoved = false;
+        doorsToClose.forEach(d -> d.canBeRemoved = true);
+        doorsToClose.forEach(d -> {
+            shapeRenderer.begin(ShapeType.Filled);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.rect(d.x - 32, d.y - 32, 64f, 64f);
+            shapeRenderer.end();
+        });
+        for (Agent agent : agents) {
+            if (agent.isIdle) {
+                agent.setGoal(uGraph.getRandomTile());
+            }
+            agent.step(delta);
+            agent.render(shapeRenderer);
+            Rectangle rect = new Rectangle();
+            doorsToClose.forEach(d -> {
+                rect.set(d.x - 32, d.y - 32, 64f, 64f);
+                if (rect.contains(agent.x, agent.y)) {
+                    d.canBeRemoved &= false;
+                }
 
-        // Draw cities in path green
-        if (aiPath != null) {
-            for (AiTile aiTile : aiPath) {
-                aiTile.render(shapeRenderer, true);
+            });
+
+        }
+        for (Iterator<AiTile> doorIterator = doorsToClose.iterator(); doorIterator.hasNext();) {
+            AiTile door = doorIterator.next();
+            if (door.canBeRemoved) {
+                tileHasBeenRemoved |= true;
+                uGraph.removeTile(door);
+                doorIterator.remove();
             }
         }
+        if (tileHasBeenRemoved) {
+            agents.forEach(Agent::recalculatePath);
+        }
 
-        agent.step(delta);
-        agent.render(shapeRenderer);
-
+        // for each agent
+        // for each door
+        // if agent overlaps with a door
+        // do nothing
+        // else
+        // markDoorTobeClosed
+        // close all doors that are marked to be closed
+        // for each agent
+        // recalculatePath
     }
 
     @Override
@@ -183,18 +249,13 @@ public class AiTestScreen implements Screen, InputProcessor {
                 this.uGraph.addTile(clickedTile, Direction.TOP | Direction.BOTTOM | Direction.LEFT | Direction.RIGHT);
 
             } else {
+                doorsToClose.add(clickedTile);
                 // existing tile --> open door
-                this.uGraph.removeVertex(clickedTile);
 
             }
         } else {
-            this.selectTile(clickedTile);
         }
         return false;
-    }
-
-    private void selectTile(AiTile clickedTile) {
-        agent.setGoal(clickedTile);
     }
 
     @Override

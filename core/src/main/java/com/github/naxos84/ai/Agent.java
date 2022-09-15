@@ -2,6 +2,7 @@ package com.github.naxos84.ai;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -11,10 +12,11 @@ public class Agent {
 
     private AiGraph aiTileGraph;
 
-    float x;
-    float y;
+    public float x;
+    public float y;
 
-    private float movementSpeed = 100f;
+    private float movementSpeed;
+    Random random = new Random();
 
     private Vector2 direction = new Vector2();
 
@@ -22,8 +24,11 @@ public class Agent {
     private Queue<AiTile> pathQueue = new Queue<>();
 
     private List<AiTile> graphPath;
+    public boolean isIdle = true;
 
     private long startTime;
+    private float wanderingTime = 0f;
+    private AiTile currentGoal;
 
     public Agent(AiGraph aiTileGraph, int startX, int startY) {
         this.aiTileGraph = aiTileGraph;
@@ -31,6 +36,7 @@ public class Agent {
         this.x = start.x;
         this.y = start.y;
         this.previousAiTile = start;
+        this.movementSpeed = random.nextFloat(70, 130);
     }
 
     public void render(ShapeRenderer shapeRenderer) {
@@ -46,33 +52,57 @@ public class Agent {
     }
 
     public void step(float delta) {
+        wanderingTime += delta;
+        if (isLost()) {
+            wanderingTime = 0;
+            setSpeedToNextAiTile();
+            ;
+        }
         x += direction.x * movementSpeed * delta;
         y += direction.y * movementSpeed * delta;
         checkCollision();
+    }
+
+    private boolean isLost() {
+        return wanderingTime > 4;
     }
 
     /**
      * Set the goal tile, calculate a path, and start moving.
      */
     public void setGoal(AiTile goal) {
+        isIdle = false;
+        this.currentGoal = goal;
         startTime = new Date().getTime();
         if (goal == null) {
             return;
         }
-
-        if (pathQueue.size != 0) {
-            AiTile first = pathQueue.first();
-            this.graphPath = aiTileGraph.findPath(first, goal);
-            pathQueue.clear();
-            pathQueue.addFirst(first);
-        } else {
-            this.graphPath = aiTileGraph.findPath(previousAiTile, goal);
-            pathQueue.clear();
-        }
-        System.out.println("Found path with " + graphPath.size() + " nodes");
+        recalculatePath();
 
         for (int i = 1; i < graphPath.size(); i++) {
             pathQueue.addLast(graphPath.get(i));
+        }
+        setSpeedToNextAiTile();
+    }
+
+    public void recalculatePath() {
+        if (pathQueue.size != 0) {
+            try {
+                AiTile first = pathQueue.first();
+                this.graphPath = aiTileGraph.findPath(first, currentGoal);
+                pathQueue.clear();
+                pathQueue.addFirst(first);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error case A");
+                reachDestination();
+            }
+        } else {
+            try {
+                this.graphPath = aiTileGraph.findPath(previousAiTile, currentGoal);
+                pathQueue.clear();
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error case B");
+            }
         }
         setSpeedToNextAiTile();
     }
@@ -93,6 +123,7 @@ public class Agent {
      * Agent has collided with the next tile in its path.
      */
     private void reachNextAiTile() {
+        wanderingTime = 0;
 
         AiTile nextAiTile = pathQueue.first();
 
@@ -113,6 +144,7 @@ public class Agent {
      */
     private void setSpeedToNextAiTile() {
         if (pathQueue.isEmpty()) {
+            this.isIdle = true;
             return;
         }
         AiTile nextAiTile = pathQueue.first();
@@ -126,8 +158,8 @@ public class Agent {
      */
     private void reachDestination() {
         direction.set(0, 0);
+        this.isIdle = true;
         long now = new Date().getTime();
-        System.out.println("Took " + (now - startTime) / 1000 + " seconds");
     }
 
     public List<AiTile> getCurrentPath() {

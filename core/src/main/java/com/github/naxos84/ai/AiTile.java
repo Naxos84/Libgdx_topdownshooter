@@ -9,6 +9,8 @@ public class AiTile extends Coord {
     int gridX;
     int gridY;
 
+    public boolean canBeRemoved = true;
+
     public AiTile(float x, float y, int gridX, int gridY) {
         super(Math.round(x), Math.round(y));
         this.gridX = gridX;

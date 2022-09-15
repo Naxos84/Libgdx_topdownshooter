@@ -1,9 +1,11 @@
 package com.github.naxos84.ai;
 
 import java.util.List;
+import java.util.Random;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.utils.Array;
 
 import squidpony.squidai.graph.Edge;
 import squidpony.squidai.graph.Heuristic;
@@ -13,6 +15,10 @@ public class AiGraph extends UndirectedGraph<AiTile> {
 
     private int mapWidth;
     private int mapHeight;
+
+    private Array<AiTile> tiles = new Array<>();
+
+    Random random = new Random();
 
     public AiGraph(int width, int height) {
         mapWidth = width;
@@ -103,40 +109,52 @@ public class AiGraph extends UndirectedGraph<AiTile> {
         return null;
     }
 
-    public void addTile(AiTile tile, int i) {
+    public void addTile(AiTile tile, int direction) {
+        this.tiles.add(tile);
         this.addVertex(tile);
 
-        if ((Direction.TOP & i) > 0) {
+        if ((Direction.TOP & direction) > 0) {
             AiTile topNeighbour = this.getTopNeighbur(tile.gridX, tile.gridY, mapHeight);
             this.connect(tile, topNeighbour);
         }
-        if ((Direction.TOP_LEFT & i) > 0) {
+        if ((Direction.TOP_LEFT & direction) > 0) {
             throw new UnsupportedOperationException("Top-left not implemented yet");
         }
-        if ((Direction.LEFT & i) > 0) {
+        if ((Direction.LEFT & direction) > 0) {
             AiTile leftNeighbour = this.getLeftNeighbour(tile.gridX, tile.gridY);
             this.connect(tile, leftNeighbour);
         }
-        if ((Direction.BOTTOM_LEFT & i) > 0) {
+        if ((Direction.BOTTOM_LEFT & direction) > 0) {
             AiTile bottomLeftNeighbour = this.getBottomLeftNeighbour(tile.gridX, tile.gridY);
             this.connect(tile, bottomLeftNeighbour);
         }
-        if ((Direction.BOTTOM & i) > 0) {
+        if ((Direction.BOTTOM & direction) > 0) {
             AiTile bottomNeighbour = this.getBottomNeighbour(tile.gridX, tile.gridY);
             this.connect(tile, bottomNeighbour);
         }
-        if ((Direction.BOTTOM_RIGHT & i) > 0) {
+        if ((Direction.BOTTOM_RIGHT & direction) > 0) {
             AiTile bottomRightNeighbour = this.getBottomRightNeighbour(tile.gridX, tile.gridY, mapWidth);
             connect(tile, bottomRightNeighbour);
         }
-        if ((Direction.RIGHT & i) > 0) {
+        if ((Direction.RIGHT & direction) > 0) {
             AiTile rightNeighbour = this.getRightNeighbour(tile.gridX, tile.gridY, mapWidth);
             this.connect(tile, rightNeighbour);
         }
-        if ((Direction.TOP_RIGHT & i) > 0) {
+        if ((Direction.TOP_RIGHT & direction) > 0) {
             throw new UnsupportedOperationException("Top-right not implemented yet");
         }
 
+    }
+
+    public AiTile getRandomTile() {
+        int goal = random.nextInt(0, tiles.size);
+        return tiles.get(goal);
+
+    }
+
+    public void removeTile(AiTile clickedTile) {
+        tiles.removeValue(clickedTile, true);
+        this.removeVertex(clickedTile);
     }
 
 }
