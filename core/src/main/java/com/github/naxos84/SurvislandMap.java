@@ -111,14 +111,14 @@ public class SurvislandMap {
         }
     }
 
-    public void toggleDoorAt(Vector2 coordinates) {
-        this.toggleDoorAt(coordinates.x * mapTileWidth, coordinates.y * mapTileHeight);
-    }
-
-    public void toggleDoorAt(float x, float y) {
+    public void toggleDoorAt(float x, float y, Rectangle blockingCollider) {
         for (Wall wall : walls) {
             if (wall.isDoor() && wall.getCollider().contains(x, y)) {
-                wall.setOpen(!wall.isOpen());
+                if (blockingCollider == null) {
+                    wall.toggle();
+                } else if (!wall.getCollider().overlaps(blockingCollider)) {
+                    wall.toggle();
+                }
             }
         }
     }

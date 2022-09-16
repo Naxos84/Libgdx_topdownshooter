@@ -9,18 +9,15 @@ import com.badlogic.gdx.math.Vector2;
 public class SurvislandPlayer implements Collidable {
 
     private TextureRegion textureRegion;
-    private int width;
-    private int height;
     private Rectangle collider;
     private Vector2 position;
-    private float rotation;
+    private Vector2 direction;
+    private float interactionRange = 60f;
     private float movementSpeed = 200f;
 
-    public SurvislandPlayer(TextureRegion textureRegion, int width, int height) {
+    public SurvislandPlayer(TextureRegion textureRegion) {
         this.textureRegion = textureRegion;
-        this.width = width;
-        this.height = height;
-        float size = Math.max(width, height);
+        float size = Math.max(textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
         this.collider = new Rectangle(0, 0, size, size);
         position = new Vector2();
     }
@@ -29,23 +26,43 @@ public class SurvislandPlayer implements Collidable {
         this.position.set(position);
     }
 
+    public void setPosition(float x, float y) {
+        this.position.set(x, y);
+    }
+
     public void renderDebug(ShapeRenderer debugRenderer) {
         debugRenderer.rect(this.collider.x, this.collider.y,
                 this.collider.width, this.collider.height);
+        debugRenderer.line(position.x + getHalfPlayerWidth(), position.y + getHalfPlayerHeight(),
+                position.x + direction.x + getHalfPlayerWidth(),
+                position.y + direction.y + getHalfPlayerHeight());
+    }
+
+    /**
+     * Returns the direction relative to the players center.
+     */
+    public Vector2 getRelativeDirection() {
+        return direction.cpy().add(getHalfPlayerWidth(), getHalfPlayerHeight());
+    }
+
+    /**
+     * Returns the direction of the player in World positon
+     */
+    public Vector2 getAbsoluteDirection() {
+        return this.position.cpy().add(getRelativeDirection());
     }
 
     public void lookAt(Vector2 position) {
-        this.rotation = calculateRotation(position);
+        calculateRotationTo(position);
     }
 
-    public float calculateRotation(Vector2 position) {
+    private void calculateRotationTo(Vector2 position) {
         Vector2 playerPosition = this.position.cpy();
         playerPosition.add(collider.width / 2f, collider.height / 2f);
 
-        Vector2 targetPosition = position.cpy();
-        targetPosition.sub(playerPosition);
-
-        return targetPosition.angleDeg();
+        direction = position.cpy();
+        direction.sub(playerPosition);
+        direction.setLength(interactionRange);
     }
 
     public float getX() {
@@ -57,15 +74,23 @@ public class SurvislandPlayer implements Collidable {
     }
 
     public float getWidth() {
-        return width;
+        return this.collider.getWidth();
     }
 
     public float getHeight() {
-        return height;
+        return this.collider.getHeight();
+    }
+
+    private float getHalfPlayerWidth() {
+        return getWidth() / 2;
+    }
+
+    private float getHalfPlayerHeight() {
+        return getHeight() / 2;
     }
 
     public float getRotation() {
-        return rotation;
+        return direction.angleDeg();
     }
 
     @Override
@@ -75,10 +100,6 @@ public class SurvislandPlayer implements Collidable {
 
     public float getSize() {
         return Math.max(getWidth(), getHeight());
-    }
-
-    public void setPosition(float x, float y) {
-        this.position.set(x, y);
     }
 
     public void move(Vector2 v, float delta) {
@@ -96,13 +117,20 @@ public class SurvislandPlayer implements Collidable {
     }
 
     public void render(SpriteBatch batch) {
-        float halfPlayerWidth = this.getWidth() / 2f; // TODO maybe use collider dimensions
-        float halfPlayerHeight = this.getHeight() / 2f; // TODO maybe use collider dimensions
+        float halfPlayerWidth = getHalfPlayerWidth(); // TODO maybe use collider
+                                                      // dimensions
+        float halfPlayerHeight = getHalfPlayerHeight(); // TODO maybe use collider
+                                                        // dimensions
 
         batch.draw(textureRegion, getX(), getY(),
                 halfPlayerWidth, halfPlayerHeight, getWidth(),
                 getHeight(), 1f, 1f,
                 getRotation());
+
+    }
+
+    public boolean canInteractWith(Rectangle interactable) {
+        return interactable.contains(direction.x + getHalfPlayerWidth(), direction.y + getHalfPlayerHeight());
     }
 
 }

@@ -35,6 +35,12 @@ public class Wall implements Collidable {
         this.cell = cell;
     }
 
+    public void toggle() {
+        if (isDoor) { // TODO add interface toggleable
+            setOpen(!isOpen());
+        }
+    }
+
     public void setOpen(boolean isOpen) {
         int currentRotation = this.cell.getRotation();
         if (isOpen) {

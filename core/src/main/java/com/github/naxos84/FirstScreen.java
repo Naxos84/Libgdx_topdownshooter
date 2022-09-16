@@ -46,7 +46,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		this.characterTexture = new Texture("characters/spritesheet.png");
 		this.zombie = new TextureRegion(characterTexture, 460, 0, 33, 43);
 		this.batch = new SpriteBatch();
-		sPlayer = new SurvislandPlayer(this.zombie, 33, 43);
+		sPlayer = new SurvislandPlayer(this.zombie);
 		this.spawnPlayer();
 
 		this.updateCamera();
@@ -73,6 +73,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		sPlayer.lookAt(mousePosition);
 
 		this.batch.setProjectionMatrix(this.camera.combined);
+		this.debugRenderer.setProjectionMatrix(this.camera.combined);
 		this.batch.begin();
 		this.sPlayer.render(batch);
 
@@ -242,6 +243,9 @@ public class FirstScreen implements Screen, InputProcessor {
 		if (character == 'j') {
 			sMap.toggleAllDoors();
 		}
+		if (character == 'e') {
+			openDoor();
+		}
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -249,9 +253,13 @@ public class FirstScreen implements Screen, InputProcessor {
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		Vector2 mouseCoordinates = toWorldCoordinates(screenX, screenY);
-		sMap.toggleDoorAt(mouseCoordinates);
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public void openDoor() {
+		Vector2 playerDirection = sPlayer.getAbsoluteDirection();
+		sMap.toggleDoorAt(playerDirection.x, playerDirection.y, sPlayer.getCollider());
 	}
 
 	public Vector2 toWorldCoordinates(float x, float y) {
