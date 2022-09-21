@@ -8,14 +8,26 @@ public class Wall implements Collidable {
     private Rectangle wallCollider;
     private Cell cell;
     private boolean isDoor;
+    private int gridX;
+    private int gridY;
 
-    public Wall(Rectangle wallCollider, Cell cell) {
+    public Wall(int gridX, int gridY, Rectangle wallCollider, Cell cell) {
+        this.gridX = gridX;
+        this.gridY = gridY;
         this.wallCollider = wallCollider;
         this.cell = cell;
 
         if (cell.getTile().getProperties().containsKey("isDoor")) {
             this.isDoor = cell.getTile().getProperties().get("isDoor", Boolean.class);
         }
+    }
+
+    public int getGridX() {
+        return this.gridX;
+    }
+
+    public int getGridY() {
+        return this.gridY;
     }
 
     @Override
@@ -37,6 +49,8 @@ public class Wall implements Collidable {
 
     public void toggle() {
         if (isDoor) { // TODO add interface toggleable
+            boolean isCurrentlyOpen = isOpen();
+            System.out.println("Toggled door is currently open: " + isCurrentlyOpen);
             setOpen(!isOpen());
         }
     }
@@ -44,8 +58,10 @@ public class Wall implements Collidable {
     public void setOpen(boolean isOpen) {
         int currentRotation = this.cell.getRotation();
         if (isOpen) {
+            System.out.println("CurrentRotation " + currentRotation + " + 1");
             this.cell.setRotation(currentRotation + 1);
         } else {
+            System.out.println("CurrentRotation " + currentRotation + " - 1");
             this.cell.setRotation(currentRotation - 1);
         }
     }
@@ -70,6 +86,11 @@ public class Wall implements Collidable {
     public boolean isCollidable() {
 
         return !(isDoor() && isOpen());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Wall: %f:%f - %f:%f", wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
     }
 
 }

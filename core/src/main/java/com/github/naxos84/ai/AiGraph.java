@@ -40,6 +40,7 @@ public class AiGraph extends UndirectedGraph<AiTile> {
                     aiTileConnection.getB().x, aiTileConnection.getB().y, 2);
         }
         shapeRenderer.end();
+
     }
 
     // extract it to a graph renderer
@@ -54,6 +55,7 @@ public class AiGraph extends UndirectedGraph<AiTile> {
         if (from == null || to == null) {
             return;
         }
+        System.out.println("Connecting " + from + "->" + to);
         addEdge(from, to);
     }
 
@@ -112,6 +114,7 @@ public class AiGraph extends UndirectedGraph<AiTile> {
     public void addTile(AiTile tile, int direction) {
         this.tiles.add(tile);
         this.addVertex(tile);
+        System.out.println("Adding tile " + tile);
 
         if ((Direction.TOP & direction) > 0) {
             AiTile topNeighbour = this.getTopNeighbur(tile.gridX, tile.gridY, mapHeight);

@@ -65,7 +65,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 0.2f);
 
-		this.sMap.render(this.camera);
+		this.sMap.render(this.camera, delta);
 		handleInput();
 		handleMapBorderCollision();
 
@@ -258,6 +258,7 @@ public class FirstScreen implements Screen, InputProcessor {
 	}
 
 	public void openDoor() {
+		System.out.println("Attempt to toggle door");
 		Vector2 playerDirection = sPlayer.getAbsoluteDirection();
 		sMap.toggleDoorAt(playerDirection.x, playerDirection.y, sPlayer.getCollider());
 	}

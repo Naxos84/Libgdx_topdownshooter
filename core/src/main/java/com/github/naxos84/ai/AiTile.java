@@ -34,7 +34,7 @@ public class AiTile extends Coord {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(x).append(":").append(y);
+        sb.append(x).append(":").append(y).append("(").append(gridX).append(":").append(gridY).append(")");
         return sb.toString();
     }
 }
