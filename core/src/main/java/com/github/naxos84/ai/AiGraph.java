@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Random;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Array;
 
 import squidpony.squidai.graph.Edge;
@@ -33,13 +32,10 @@ public class AiGraph extends UndirectedGraph<AiTile> {
 
     // extract it to a graph renderer
     public void renderConnections(ShapeRenderer shapeRenderer) {
-        shapeRenderer.begin(ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 1);
         for (Edge<AiTile> aiTileConnection : this.getEdges()) {
             shapeRenderer.rectLine(aiTileConnection.getA().x, aiTileConnection.getA().y,
                     aiTileConnection.getB().x, aiTileConnection.getB().y, 2);
         }
-        shapeRenderer.end();
 
     }
 

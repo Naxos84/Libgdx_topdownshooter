@@ -23,6 +23,8 @@ import com.github.naxos84.ai.Agent;
 import com.github.naxos84.ai.AiGraph;
 import com.github.naxos84.ai.AiTile;
 import com.github.naxos84.ai.Direction;
+import com.github.naxos84.map.Door;
+import com.github.naxos84.map.Wall;
 
 import squidpony.squidmath.Coord;
 
@@ -83,11 +85,18 @@ public class SurvislandMap {
             for (int row = 0; row < wallsLayer.getHeight(); row++) {
                 Cell cell = wallsLayer.getCell(column, row);
                 if (cell != null) {
+                    Boolean isDoor = cell.getTile().getProperties().get("isDoor", false, Boolean.class);
                     Rectangle wallCollider = new Rectangle((float) column * wallsLayer.getTileWidth(),
                             (float) row * wallsLayer.getTileHeight(), wallsLayer.getTileWidth(),
                             wallsLayer.getTileHeight());
-
-                    Wall wall = new Wall(column, row, wallCollider, cell);
+                    final Wall wall;
+                    AiTile aiTile = new AiTile(column * mapTileWidth + halfMapTileWidth,
+                            row * mapTileHeight + halfMapTileHeight, column, row);
+                    if (Boolean.TRUE.equals(isDoor)) {
+                        wall = new Door(column, row, wallCollider, cell, aiTile);
+                    } else {
+                        wall = new Wall(column, row, wallCollider, cell, aiTile);
+                    }
                     this.walls.add(wall);
                 }
             }
@@ -137,7 +146,6 @@ public class SurvislandMap {
         this.mapRenderer.setView(camera);
         this.mapRenderer.render();
         shapeRenderer.setProjectionMatrix(camera.combined);
-        uGraph.renderConnections(shapeRenderer);
 
         for (Agent agent : agents) {
             if (agent.isIdle) {
@@ -176,23 +184,10 @@ public class SurvislandMap {
         return Vector2.Zero;
     }
 
-    // public Array<Wall> getWalls() {
-    // return this.walls;
-    // }
-
-    public void toggleAllDoors() {
+    private Door findDoorByGridPosition(int gridX, int gridY) {
         for (Wall wall : walls) {
-            boolean open = wall.isOpen();
-            if (wall.isDoor()) {
-                wall.setOpen(!open);
-            }
-        }
-    }
-
-    private Wall findWallByGridPosition(int gridX, int gridY) {
-        for (Wall wall : walls) {
-            if (wall.getGridX() == gridX && wall.getGridY() == gridY) {
-                return wall;
+            if (wall.getGridX() == gridX && wall.getGridY() == gridY && wall instanceof Door) {
+                return (Door) wall;
             }
         }
         return null;
@@ -202,64 +197,42 @@ public class SurvislandMap {
         int gridX = (int) x / CELL_SIZE;
         int gridY = (int) y / CELL_SIZE;
         System.out.println("Toggling door at " + gridX + ":" + gridY);
-        AiTile doorTile = this.uGraph.findTileByGridPosition(gridX, gridY);
-        Wall wall = this.findWallByGridPosition(gridX, gridY);
-        if (doorTile == null && wall != null) {
-            // no tile exists yet --> door closed
-            doorTile = new AiTile(gridX * mapTileWidth + halfMapTileWidth, gridY * mapTileHeight + halfMapTileHeight,
-                    gridX,
-                    gridY);
-            this.uGraph.addTile(doorTile, Direction.TOP | Direction.BOTTOM | Direction.LEFT | Direction.RIGHT);
+        Door door = this.findDoorByGridPosition(gridX, gridY);
+        if (door == null) {
+            return;
+        }
+        if (door.isClosed()) {
+            this.uGraph.addTile(door.getTile(), Direction.TOP | Direction.BOTTOM | Direction.LEFT | Direction.RIGHT);
+            door.setOpen(true);
+        } else if (door.isOpen()) {
 
-            if (wall.isDoor() && wall.getCollider().contains(x, y)) {
-                if (blockingCollider == null) {
-                    wall.toggle();
-                } else if (!wall.getCollider().overlaps(blockingCollider)) {
-                    wall.toggle();
-                }
-            }
-
-        } else if (doorTile != null && wall != null) {
-            Rectangle rect = new Rectangle(doorTile.x, doorTile.y, 64f, 64f);
-            boolean closeDoor = true;
+            Rectangle rect = door.getCollider();
             for (Agent agent : agents) {
                 if (rect.contains(agent.x, agent.y)) {
-                    closeDoor = false;
-                    break;
+                    // can't close the door cause an agent is blocking it
+                    return;
                 }
             }
-            Wall wallToClose = null;
-            if (wall.isDoor() && wall.getCollider().contains(x, y)) {
-                if (blockingCollider == null) {
-                    System.out.println("Check why blocking collider is null");
-                } else if (!wall.getCollider().overlaps(blockingCollider)) {
-                    wallToClose = wall;
-                    closeDoor &= true;
-                    System.out.println("Found wall to close " + wall);
-                    // wall.toggle();
-                } else {
-                    closeDoor = false;
-                }
-            }
-            if (closeDoor) {
-                wallToClose.toggle();
-                this.uGraph.removeTile(doorTile);
+            if (door.getCollider().overlaps(blockingCollider)) {
+                // can't close the door cause it is colliding with given collider
+            } else {
+                door.setOpen(false);
+                this.uGraph.removeTile(door.getTile());
                 agents.forEach(Agent::recalculatePath);
             }
 
-        } else {
-            System.out.println("No door found to toggle");
         }
 
     }
 
-    public void renderWallsDebug(ShapeRenderer debugRenderer) {
+    public void renderDebug(ShapeRenderer debugRenderer) {
         for (Wall wall : walls) {
             Rectangle wallCollider = wall.getCollider();
             if (wall.isCollidable()) {
                 debugRenderer.rect(wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
             }
         }
+        uGraph.renderConnections(debugRenderer);
     }
 
     public boolean isCollidingWithWall(Collidable collidable) {

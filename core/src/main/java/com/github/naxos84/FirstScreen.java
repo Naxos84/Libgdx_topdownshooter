@@ -21,7 +21,7 @@ import com.badlogic.gdx.math.Vector3;
  */
 public class FirstScreen implements Screen, InputProcessor {
 
-	private final boolean debug = false;
+	private final boolean debug = true;
 
 	private float delta;
 
@@ -101,7 +101,7 @@ public class FirstScreen implements Screen, InputProcessor {
 		debugRenderer.begin(ShapeType.Line);
 
 		sPlayer.renderDebug(debugRenderer);
-		sMap.renderWallsDebug(debugRenderer);
+		sMap.renderDebug(debugRenderer);
 
 		debugRenderer.end();
 	}
@@ -241,7 +241,6 @@ public class FirstScreen implements Screen, InputProcessor {
 	@Override
 	public boolean keyTyped(char character) {
 		if (character == 'j') {
-			sMap.toggleAllDoors();
 		}
 		if (character == 'e') {
 			openDoor();
