@@ -3,6 +3,8 @@ package com.github.naxos84.ai;
 import java.util.List;
 import java.util.Random;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
@@ -11,8 +13,7 @@ public class Agent {
 
     private AiGraph aiTileGraph;
 
-    public float x;
-    public float y;
+    private Vector2 position = new Vector2();
 
     private float movementSpeed;
     Random random = new Random();
@@ -27,26 +28,31 @@ public class Agent {
 
     private float wanderingTime = 0f;
     private AiTile currentGoal;
+    private TextureRegion textureRegion;
 
-    public Agent(AiGraph aiTileGraph, int startX, int startY) {
+    public Agent(AiGraph aiTileGraph, int startX, int startY, TextureRegion textureRegion) {
         this.aiTileGraph = aiTileGraph;
         AiTile start = aiTileGraph.findTileByGridPosition(startX, startY);
-        this.x = start.x;
-        this.y = start.y;
+        this.position.set(start.x, start.y);
         this.previousAiTile = start;
         this.movementSpeed = random.nextFloat(70, 130);
+        this.textureRegion = textureRegion;
     }
 
-    public void render(ShapeRenderer shapeRenderer) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(1f, 0f, 0f, 1);
-        shapeRenderer.circle(x, y, 5);
-        shapeRenderer.end();
+    public void render(SpriteBatch batch) {
+        batch.draw(textureRegion, getX() - 21.5f, getY() - 21.5f,
+                21.5f, 21.5f, 43,
+                43, 1f, 1f,
+                getRotation());
+    }
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.circle(x, y, 5);
-        shapeRenderer.end();
+    public void renderDebug(ShapeRenderer debugRenderer) {
+
+        debugRenderer.setColor(1f, 0f, 0f, 1);
+        debugRenderer.circle(position.x, position.y, 5);
+        debugRenderer.line(position.x, position.y,
+                position.x + direction.x * 32,
+                position.y + direction.y * 32);
     }
 
     public void step(float delta) {
@@ -54,11 +60,18 @@ public class Agent {
         if (isLost()) {
             wanderingTime = 0;
             setSpeedToNextAiTile();
-            ;
         }
-        x += direction.x * movementSpeed * delta;
-        y += direction.y * movementSpeed * delta;
+        // TODO
+        this.position.add(direction.setLength(movementSpeed * delta));
         checkCollision();
+    }
+
+    public float getX() {
+        return this.position.x;
+    }
+
+    public float getY() {
+        return this.position.y;
     }
 
     private boolean isLost() {
@@ -110,7 +123,8 @@ public class Agent {
     private void checkCollision() {
         if (pathQueue.size > 0) {
             AiTile targetAiTile = pathQueue.first();
-            if (Vector2.dst(x, y, targetAiTile.x, targetAiTile.y) < 5) {
+            float distance = Vector2.dst(position.x, position.y, targetAiTile.x, targetAiTile.y);
+            if (distance < 5) {
                 reachNextAiTile();
             }
         }
@@ -144,10 +158,21 @@ public class Agent {
             this.isIdle = true;
             return;
         }
+
         AiTile nextAiTile = pathQueue.first();
-        direction.x = nextAiTile.x - this.x;
-        direction.y = nextAiTile.y - this.y;
-        direction = direction.nor();
+        calculateRotationTo(new Vector2(nextAiTile.x, nextAiTile.y));
+    }
+
+    private float getRotation() {
+        return direction.angleDeg();
+    }
+
+    private void calculateRotationTo(Vector2 target) {
+        Vector2 playerPosition = this.position.cpy();
+
+        direction = target.cpy();
+        direction.sub(playerPosition);
+        direction.setLength(100);
     }
 
     /**

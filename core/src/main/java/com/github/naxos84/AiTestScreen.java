@@ -89,7 +89,7 @@ public class AiTestScreen implements Screen, InputProcessor {
     private void spawnZ() {
         int gridSpawnLocation = random.nextInt(0, zSpawns.size());
         Coord coord = zSpawns.get(gridSpawnLocation);
-        agents.add(new Agent(uGraph, coord.x, coord.y));
+        agents.add(new Agent(uGraph, coord.x, coord.y, null));
 
     }
 
@@ -135,7 +135,7 @@ public class AiTestScreen implements Screen, InputProcessor {
                 agent.setGoal(uGraph.getRandomTile());
             }
             agent.step(delta);
-            agent.render(shapeRenderer);
+            agent.renderDebug(shapeRenderer);
 
         }
     }
@@ -213,7 +213,7 @@ public class AiTestScreen implements Screen, InputProcessor {
                 Rectangle rect = new Rectangle(clickedTile.x, clickedTile.y, 64f, 64f);
                 boolean closeDoor = true;
                 for (Agent agent : agents) {
-                    if (rect.contains(agent.x, agent.y)) {
+                    if (rect.contains(agent.getX(), agent.getY())) {
                         closeDoor = false;
                         break;
                     }

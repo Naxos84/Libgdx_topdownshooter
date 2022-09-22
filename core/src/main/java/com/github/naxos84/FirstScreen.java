@@ -40,11 +40,12 @@ public class FirstScreen implements Screen, InputProcessor {
 
 	@Override
 	public void show() {
-		sMap.loadMap("tiled/base.tmx");
-		this.camera = new OrthographicCamera(800, 600);
 
 		this.characterTexture = new Texture("characters/spritesheet.png");
 		this.zombie = new TextureRegion(characterTexture, 460, 0, 33, 43);
+		sMap.tRegion = this.zombie;
+		sMap.loadMap("tiled/base.tmx");
+		this.camera = new OrthographicCamera(800, 600);
 		this.batch = new SpriteBatch();
 		sPlayer = new SurvislandPlayer(this.zombie);
 		this.spawnPlayer();
@@ -65,7 +66,6 @@ public class FirstScreen implements Screen, InputProcessor {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 0.2f);
 
-		this.sMap.render(this.camera, delta);
 		handleInput();
 		handleMapBorderCollision();
 
@@ -73,10 +73,9 @@ public class FirstScreen implements Screen, InputProcessor {
 		sPlayer.lookAt(mousePosition);
 
 		this.batch.setProjectionMatrix(this.camera.combined);
-		this.debugRenderer.setProjectionMatrix(this.camera.combined);
 		this.batch.begin();
+		this.sMap.render(batch, this.camera, delta);
 		this.sPlayer.render(batch);
-
 		this.batch.end();
 
 		if (debug) {

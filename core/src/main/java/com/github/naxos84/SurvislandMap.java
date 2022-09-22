@@ -6,6 +6,8 @@ import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.MapObject;
@@ -35,7 +37,6 @@ public class SurvislandMap {
 
     private TmxMapLoader mapLoader = new TmxMapLoader();
     private OrthogonalTiledMapRenderer mapRenderer = new OrthogonalTiledMapRenderer(null);
-    private ShapeRenderer shapeRenderer = new ShapeRenderer();
 
     private TiledMap map;
 
@@ -52,6 +53,8 @@ public class SurvislandMap {
     private float halfMapTileHeight;
 
     private AiGraph uGraph;
+
+    public TextureRegion tRegion;
 
     public void loadMap(String fileName) {
         this.map = mapLoader.load(fileName);
@@ -138,21 +141,20 @@ public class SurvislandMap {
     private void spawnZ() {
         int gridSpawnLocation = random.nextInt(0, zSpawns.size());
         Coord coord = zSpawns.get(gridSpawnLocation);
-        agents.add(new Agent(uGraph, coord.x, coord.y));
+        agents.add(new Agent(uGraph, coord.x, coord.y, tRegion));
 
     }
 
-    public void render(OrthographicCamera camera, float delta) {
+    public void render(SpriteBatch batch, OrthographicCamera camera, float delta) {
         this.mapRenderer.setView(camera);
         this.mapRenderer.render();
-        shapeRenderer.setProjectionMatrix(camera.combined);
 
         for (Agent agent : agents) {
             if (agent.isIdle) {
                 agent.setGoal(uGraph.getRandomTile());
             }
             agent.step(delta);
-            agent.render(shapeRenderer);
+            agent.render(batch);
 
         }
     }
@@ -208,7 +210,7 @@ public class SurvislandMap {
 
             Rectangle rect = door.getCollider();
             for (Agent agent : agents) {
-                if (rect.contains(agent.x, agent.y)) {
+                if (rect.contains(agent.getX(), agent.getY())) {
                     // can't close the door cause an agent is blocking it
                     return;
                 }
@@ -231,6 +233,9 @@ public class SurvislandMap {
             if (wall.isCollidable()) {
                 debugRenderer.rect(wallCollider.x, wallCollider.y, wallCollider.width, wallCollider.height);
             }
+        }
+        for (Agent agent : agents) {
+            agent.renderDebug(debugRenderer);
         }
         uGraph.renderConnections(debugRenderer);
     }
