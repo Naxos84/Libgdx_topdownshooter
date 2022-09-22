@@ -21,7 +21,7 @@ import com.badlogic.gdx.math.Vector3;
  */
 public class FirstScreen implements Screen, InputProcessor {
 
-	private final boolean debug = true;
+	private final boolean debug = false;
 
 	private float delta;
 
